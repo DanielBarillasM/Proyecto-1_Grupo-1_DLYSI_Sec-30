@@ -14,6 +14,7 @@ required = [
     "entregables/presentacion/presentacion.html", "entregables/presentacion/presentacion.pdf",
     "entregables/ficha/Ficha_Repositorio_Proyecto1.docx",
     ".github/README.md", "configuracion/requirements.txt",
+    "configuracion/INSTRUCCIONES_EJECUCION.md",
     "codigo/proyecto1_pipeline.py", "codigo/download_data.py",
     "codigo/build_deliverables.py", "codigo/crear_ficha_repositorio.py",
     "artefactos/resultados.json",

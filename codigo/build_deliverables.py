@@ -376,7 +376,7 @@ def build_presentation() -> Path:
 
 def build_readme() -> Path:
     recommendation = "complementar el sistema con" if CANDIDATE in ["B", "C"] else "conservar como referencia"
-    text = f"""# Proyecto 1 — Monitoreo transaccional
+    text = rf"""# Proyecto 1 — Monitoreo transaccional
 
 **Grupo 1 · Sección 30 · Universidad del Valle de Guatemala**
 
@@ -412,10 +412,24 @@ modelo secuencial.
 
 ## Datos y reproducción
 
-El proyecto utiliza `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection). Los datos no se versionan.
+El proyecto utiliza `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection). Los datos y las credenciales no se versionan. La guía detallada, incluidos requisitos del sistema y solución de problemas, está en [`configuracion/INSTRUCCIONES_EJECUCION.md`](../configuracion/INSTRUCCIONES_EJECUCION.md).
+
+### Preparación del entorno en PowerShell
 
 ```powershell
+python --version
+python -m venv configuracion/.venv
+.\configuracion\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 python -m pip install -r configuracion/requirements.txt
+python -c "import torch, sklearn, pandas; print(torch.__version__, sklearn.__version__, pandas.__version__)"
+```
+
+Las versiones fueron comprobadas con Python 3.13.1. Si PowerShell bloquea la activación, ejecute antes `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
+
+### Reproducción completa
+
+```powershell
 python -c "import kagglehub; kagglehub.login()"
 python codigo/download_data.py
 python codigo/proyecto1_pipeline.py
@@ -429,7 +443,13 @@ python codigo/crear_ficha_repositorio.py
 python codigo/audit_project1.py
 ```
 
-Los CSV quedan en `datos/raw/`. La semilla principal es 2026. El preprocesamiento se ajusta solo con entrenamiento. El test cronológico se abre después de congelar candidato y umbrales.
+`codigo/proyecto1_pipeline.py` fuerza un entrenamiento completo y puede tardar varios minutos en CPU. Para revisar la entrega ya ejecutada sin reentrenar, basta con activar el entorno y ejecutar `python codigo/audit_project1.py`.
+
+Los CSV quedan en `datos/raw/`. La semilla principal es 2026. El preprocesamiento se ajusta solo con entrenamiento. El test cronológico se abre después de congelar candidato y umbrales. Para abrir el cuaderno de forma interactiva:
+
+```powershell
+jupyter lab entregables/cuaderno/proyecto1_calderon_barillas.ipynb
+```
 
 ## Tres decisiones técnicas importantes
 
@@ -472,17 +492,30 @@ legal/                      licencia del repositorio
 
 
 def build_requirements() -> Path:
-    text = """kagglehub==0.4.1
-matplotlib>=3.9
-nbformat>=5.10
-numpy>=2.0
-pandas>=2.2
-scikit-learn>=1.6
-torch>=2.6
-joblib>=1.4
-python-docx>=1.1
-qrcode[pil]>=8.0
-pymupdf>=1.25
+    text = """# Entorno comprobado: Python 3.13.1 (Windows, CPU)
+# Instalar desde la raíz: python -m pip install -r configuracion/requirements.txt
+
+# Experimento y datos
+kagglehub==0.4.1
+joblib==1.5.3
+matplotlib==3.10.1
+numpy==2.2.2
+pandas==2.2.3
+scikit-learn==1.8.0
+torch==2.13.0
+
+# Notebook y ejecución reproducible
+ipykernel==6.29.5
+jupyterlab==4.6.1
+nbconvert==7.17.0
+nbformat==5.10.4
+
+# Construcción y auditoría de entregables
+lxml==6.1.0
+Pillow==11.1.0
+PyMuPDF==1.28.2
+python-docx==1.2.0
+qrcode[pil]==8.2
 """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     output = CONFIG_DIR / "requirements.txt"
