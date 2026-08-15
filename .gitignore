@@ -78,6 +78,17 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Proyecto 1: datos Kaggle y archivos temporales
+data/raw/*.csv
+data/raw/kagglehub_cache/
+data/processed/
+pipeline.out.log
+pipeline.err.log
+*.aux
+*.log
+*.out
+*.toc
+
 # IPython
 profile_default/
 ipython_config.py
