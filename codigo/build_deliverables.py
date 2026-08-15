@@ -10,9 +10,14 @@ import nbformat as nbf
 import pandas as pd
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artefactos"
-FIG = ROOT / "figuras"
+FIG = ROOT / "evidencia" / "figuras"
+NOTEBOOK_DIR = ROOT / "entregables" / "cuaderno"
+REPORT_DIR = ROOT / "entregables" / "informe"
+PRESENTATION_DIR = ROOT / "entregables" / "presentacion"
+README_DIR = ROOT / ".github"
+CONFIG_DIR = ROOT / "configuracion"
 RESULTS = json.loads((ART / "resultados.json").read_text(encoding="utf-8"))
 CANDIDATE = RESULTS["candidate"]
 TEST = RESULTS["test"]
@@ -77,14 +82,23 @@ def build_notebook() -> Path:
 El estudio compara una línea base competitiva sin orden (A), una GRU que recibe ocho eventos ordenados (B) y una fusión de secuencia con agregados (C). El candidato congelado con validación fue <b>{CANDIDATE}</b>. La caída de AUC-PR al permutar la historia fue <b>{ORDER_DROP:.3f}</b>; por tanto, la evidencia {"respalda" if ORDER_SUPPORTED else "no alcanza para respaldar"} que el orden añade señal bajo este protocolo. Todas las decisiones se tomaron antes de abrir la partición final.</div>
 """))
     cells.append(nbf.v4.new_code_cell("""from pathlib import Path
-import json, joblib, platform
+import json, joblib, platform, sys
 import numpy as np
 import pandas as pd
 import torch, sklearn
 from IPython.display import HTML, display, Image
-from src.proyecto1_pipeline import Config, run_experiment
 
-ROOT = Path.cwd()
+def localizar_raiz(inicio: Path) -> Path:
+    for candidata in (inicio, *inicio.parents):
+        if (candidata/'codigo'/'proyecto1_pipeline.py').exists():
+            return candidata
+    raise FileNotFoundError('No se encontró la raíz del proyecto')
+
+ROOT = localizar_raiz(Path.cwd().resolve())
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from codigo.proyecto1_pipeline import Config, run_experiment
+
 results = run_experiment(Config(), force=False)
 print(f\"Python {platform.python_version()} | PyTorch {torch.__version__} | scikit-learn {sklearn.__version__}\")
 print(\"Resultados reproducibles cargados. Candidato:\", results[\"candidate\"])"""))
@@ -118,7 +132,7 @@ table = pd.DataFrame([
 ], columns=['Partición','n','Tasa de fraude'])
 display(table.style.format({'n':'{:,.0f}','Tasa de fraude':'{:.3%}'}).hide(axis='index'))
 print('OK · particiones cronológicas e integridad básica')"""))
-    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'figuras'/'01_integridad_temporal.png')))"))
+    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'evidencia'/'figuras'/'01_integridad_temporal.png')))"))
     cells.append(nbf.v4.new_markdown_cell("""
 ## 3. Núcleo común: piezas A y B
 
@@ -160,7 +174,7 @@ Después de congelar pesos, transformaciones, umbrales y candidato, se aplican l
 display(test.style.format({'auc_pr':'{:.3f}','precision':'{:.3f}','recall':'{:.3f}','f1':'{:.3f}','cost_q':'Q{:,.0f}'}))
 assert set(test.index) == {'A','B','C'}
 print('OK · comparación final común')"""))
-    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'figuras'/'02_curvas_precision_recall.png')))"))
+    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'evidencia'/'figuras'/'02_curvas_precision_recall.png')))"))
     cells.append(nbf.v4.new_markdown_cell(f"""
 ## 6. Valor del orden: intentos de refutación
 
@@ -169,7 +183,7 @@ La permutación controlada baraja únicamente los antecedentes válidos y mantie
 <div class="p1 p1-card {'p1-proof' if ORDER_SUPPORTED else 'p1-warn'}"><span class="tag">Conclusión falsable</span><br>
 AUC-PR original de B: <b>{FALS['original_B']['auc_pr']:.3f}</b>; permutada: <b>{FALS['permutation_mean_auc_pr']:.3f} ± {FALS['permutation_std_auc_pr']:.3f}</b>; caída: <b>{ORDER_DROP:.3f}</b>. Con el criterio previo de 0.01, la evidencia <b>{'sí respalda' if ORDER_SUPPORTED else 'no respalda'}</b> una contribución material del orden. Al truncar a tres eventos, AUC-PR fue <b>{FALS['truncated_to_3']['auc_pr']:.3f}</b>.</div>
 """))
-    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'figuras'/'03_falsificaciones_orden.png')))"))
+    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'evidencia'/'figuras'/'03_falsificaciones_orden.png')))"))
     cells.append(nbf.v4.new_markdown_cell(rf"""
 ## 7. Umbral y decisión económica
 
@@ -184,7 +198,7 @@ Para expresar el resultado mensual se adopta el escenario de 1.4 millones de tar
 <span class="kpi"><b>Q{ECON[CANDIDATE]['monthly_cost_q']:,.0f}</b>costo mensual escalado</span>
 <span class="kpi"><b>Q{ECON[CANDIDATE]['monthly_savings_vs_A_q']:,.0f}</b>ahorro vs. A</span></div>
 """))
-    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'figuras'/'04_curva_costo_umbral.png')))"))
+    cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'evidencia'/'figuras'/'04_curva_costo_umbral.png')))"))
     cells.append(nbf.v4.new_markdown_cell(f"""
 ## 8. Recomendación, errores y límites
 
@@ -232,7 +246,8 @@ Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informativ
 Scikit-learn Developers. (s. f.). *Common pitfalls and recommended practices*. Scikit-learn. Recuperado el 14 de agosto de 2026, de https://scikit-learn.org/stable/common_pitfalls.html
 """))
     nb.cells = cells
-    output = ROOT / "proyecto1_calderon_barillas.ipynb"
+    NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
+    output = NOTEBOOK_DIR / "proyecto1_calderon_barillas.ipynb"
     nbf.write(nb, output)
     return output
 
@@ -258,6 +273,7 @@ def build_report() -> Path:
     tex = rf"""\documentclass[10pt]{{article}}
 \usepackage[utf8]{{inputenc}}\usepackage[T1]{{fontenc}}
 \usepackage[margin=1.45cm]{{geometry}}\usepackage{{graphicx,booktabs,tabularx,xcolor,hyperref}}
+\graphicspath{{{{../../evidencia/figuras/}}}}
 \definecolor{{navy}}{{HTML}}{{184E77}}\definecolor{{teal}}{{HTML}}{{2A9D8F}}\definecolor{{soft}}{{HTML}}{{EDF5FB}}
 \hypersetup{{colorlinks=true,linkcolor=navy,urlcolor=teal}}\setlength{{\parindent}}{{0pt}}\setlength{{\parskip}}{{4pt}}
 \newcommand{{\kpi}}[1]{{\colorbox{{soft}}{{\strut\textbf{{#1}}}}}}
@@ -281,7 +297,7 @@ Validación & {RESULTS['splits']['validation']['n']:,} & {100 * RESULTS['splits'
 Prueba final & {RESULTS['splits']['test']['n']:,} & {100 * RESULTS['splits']['test']['fraud_rate']:.3f}\% \\\bottomrule
 \end{{tabular}}\end{{center}}
 Los primeros 70\% del tiempo entrenan, 15\% validan y 15\% prueban. Normalización, vocabularios, parada, arquitectura y umbrales se ajustan sin prueba. El submuestreo computacional ocurre solo dentro de entrenamiento y conserva todos los positivos; ambos modelos usan la misma muestra.
-\begin{{center}}\includegraphics[width=.83\linewidth]{{figuras/01_integridad_temporal.png}}\end{{center}}
+\begin{{center}}\includegraphics[width=.83\linewidth]{{01_integridad_temporal.png}}\end{{center}}
 
 \section*{{2. Núcleo A--B y apuesta C}}
 \textbf{{A}} resume nivel, dispersión, extremos, recencia y diversidad, y usa HistGradientBoosting. \textbf{{B}} codifica diez variables numéricas y seis categóricas por evento mediante embeddings y GRU(32). Ambos generan riesgo continuo. \textbf{{C}} concatena el estado final de B con agregados estandarizados. La hipótesis previa exigió que C aumentara AUC-PR al menos 0.01 y redujera costo al menos 5\% frente a B en validación. El cambio observado fue {HYP['ap_gain']:+.3f} y {100 * HYP['cost_reduction']:.1f}\%; la apuesta fue \textbf{{{'útil' if HYP['success'] else 'no útil según el criterio previo'}}}.
@@ -291,15 +307,15 @@ Los primeros 70\% del tiempo entrenan, 15\% validan y 15\% prueban. Normalizaci�
 {rows}
 \bottomrule\end{{tabular}}\end{{center}}
 AUC-PR es principal por el desbalance; precisión, recall y F1 se reportan en el umbral económico propio, fijado con validación. Exactitud no se usa para decidir.
-\begin{{center}}\includegraphics[width=.80\linewidth]{{figuras/02_curvas_precision_recall.png}}\end{{center}}
+\begin{{center}}\includegraphics[width=.80\linewidth]{{02_curvas_precision_recall.png}}\end{{center}}
 
 \section*{{4. Intentos de refutar el valor del orden}}
 Se permutó cinco veces solo la historia, manteniendo la transacción objetivo al final y todos los eventos intactos. B obtuvo AUC-PR {FALS['original_B']['auc_pr']:.3f} original y {FALS['permutation_mean_auc_pr']:.3f}$\pm${FALS['permutation_std_auc_pr']:.3f} permutada. {tex_escape(order_sentence)} La segunda prueba recortó el historial a tres eventos y produjo AUC-PR {FALS['truncated_to_3']['auc_pr']:.3f}. Estas pruebas miden dependencia predictiva, no causalidad ni identidad bancaria perfecta.
-\begin{{center}}\includegraphics[width=.75\linewidth]{{figuras/03_falsificaciones_orden.png}}\end{{center}}
+\begin{{center}}\includegraphics[width=.75\linewidth]{{03_falsificaciones_orden.png}}\end{{center}}
 
 \section*{{5. Umbral, costo y decisión}}
 Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para {CANDIDATE}, el costo de prueba es Q{TEST[CANDIDATE]['cost_q']:,.0f}, equivalente a Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f} por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q{ECON[CANDIDATE]['monthly_cost_q']:,.0f} y el ahorro frente a A es Q{ECON[CANDIDATE]['monthly_savings_vs_A_q']:,.0f}. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
-\begin{{center}}\includegraphics[width=.75\linewidth]{{figuras/04_curva_costo_umbral.png}}\end{{center}}
+\begin{{center}}\includegraphics[width=.75\linewidth]{{04_curva_costo_umbral.png}}\end{{center}}
 
 \section*{{6. Recomendación, errores y límites}}
 \textbf{{{tex_escape(recommendation)}}} El puntaje debe priorizar revisión, no bloquear automáticamente. Los falsos negativos concentran Q4,200 y los falsos positivos deterioran experiencia y capacidad operativa. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.
@@ -323,7 +339,8 @@ Saito, T., \& Rehmsmeier, M. (2015). The precision-recall plot is more informati
 Scikit-learn Developers. (s. f.). \textit{{Common pitfalls and recommended practices}}. \url{{https://scikit-learn.org/stable/common_pitfalls.html}}.
 \end{{document}}
 """
-    output = ROOT / "informe.tex"
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    output = REPORT_DIR / "informe.tex"
     output.write_text(tex, encoding="utf-8")
     return output
 
@@ -351,7 +368,8 @@ def build_presentation() -> Path:
 <section><div class="eyebrow">06 · Economía</div><h2>El umbral es una decisión, no 0.5 por costumbre</h2><div class="grid"><div><p>$C(τ)=Q4,200·FN+Q180·FP$</p><div class="card"><b>Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f}</b>por 100 mil decisiones</div><p>Escenario mensual: 1.4 M tarjetas × 12 transacciones.</p></div><img src="{cost_img}"></div></section>
 <section><div class="eyebrow">07 · Recomendación</div><h2>{'Complementar, no reemplazar' if CANDIDATE in ['B','C'] else 'Conservar y seguir investigando'}</h2><div class="grid"><div><h3>Decisión</h3><p>Usar {CANDIDATE} para priorizar revisión, sujeto a piloto, capacidad operativa y umbral recalibrado.</p><h3>Cambiaríamos si…</h3><p>una identidad confiable elimina el efecto, una cohorte posterior revierte costo/AUC-PR o el volumen de alertas excede revisión.</p></div><div><h3>Límites</h3><ul><li>Identidad aproximada</li><li>182 días y variables anonimizadas</li><li>Costos/prevalencia transferidos</li><li>Sin latencia, deriva ni piloto humano</li></ul></div></div></section>
 </div><div class="progress"></div><div class="nav">← → · espacio</div><script>const slides=[...document.querySelectorAll('section')];let i=0;function show(n){{i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,j)=>s.classList.toggle('active',j===i));document.querySelector('.progress').style.width=((i+1)/slides.length*100)+'%'}}addEventListener('keydown',e=>{{if(['ArrowRight',' ','PageDown'].includes(e.key))show(i+1);if(['ArrowLeft','PageUp'].includes(e.key))show(i-1);}});show(0);</script></body></html>"""
-    output = ROOT / "presentacion.html"
+    PRESENTATION_DIR.mkdir(parents=True, exist_ok=True)
+    output = PRESENTATION_DIR / "presentacion.html"
     output.write_text(html, encoding="utf-8")
     return output
 
@@ -365,30 +383,53 @@ def build_readme() -> Path:
 - Wilson Alejandro Calderón Argueta — 22018
 - Pablo Daniel Barillas Moreno — 22193
 
+> Comparación controlada entre una línea base agregada, una GRU secuencial y una
+> arquitectura híbrida sobre IEEE-CIS Fraud Detection. El objetivo es determinar
+> si el orden temporal aporta valor predictivo y económico verificable.
+
+**Repositorio:** [DanielBarillasM/Proyecto-1_Grupo-1_DLYSI_Sec-30](https://github.com/DanielBarillasM/Proyecto-1_Grupo-1_DLYSI_Sec-30)
+
 ## Entregables
 
-- `proyecto1_calderon_barillas.ipynb`: investigación ejecutada.
-- `informe.tex` / `informe.pdf`: informe para comité, máximo siete páginas.
-- `presentacion.html` / `presentacion.pdf`: ocho diapositivas.
-- `artefactos/`: modelos A/B/C, candidato, umbrales, preprocesamiento y contrato.
-- `src/proyecto1_pipeline.py`: pipeline reproducible.
-- `src/download_data.py`: descarga y extracción segura de los CSV oficiales.
+- [`entregables/cuaderno/proyecto1_calderon_barillas.ipynb`](../entregables/cuaderno/proyecto1_calderon_barillas.ipynb): investigación ejecutada.
+- [`entregables/informe/informe.pdf`](../entregables/informe/informe.pdf): informe ejecutivo de cuatro páginas; también se incluye su fuente LaTeX.
+- [`entregables/presentacion/presentacion.html`](../entregables/presentacion/presentacion.html): presentación interactiva y autocontenida; su versión PDF contiene ocho diapositivas.
+- [`entregables/ficha/Ficha_Repositorio_Proyecto1.docx`](../entregables/ficha/Ficha_Repositorio_Proyecto1.docx): ficha descriptiva editable del repositorio.
+- [`artefactos/`](../artefactos): modelos A/B/C, candidato, umbrales, preprocesamiento y contrato de entrada.
+
+## Resultado principal
+
+| Modelo | Diseño | AUC-PR test | Recall | Costo de prueba |
+|---|---|---:|---:|---:|
+| A | Gradient boosting sobre agregados | {TEST['A']['auc_pr']:.3f} | {TEST['A']['recall']:.3f} | Q{TEST['A']['cost_q']:,.0f} |
+| B | Embeddings + GRU(32) | {TEST['B']['auc_pr']:.3f} | {TEST['B']['recall']:.3f} | Q{TEST['B']['cost_q']:,.0f} |
+| C | GRU fusionada con agregados | {TEST['C']['auc_pr']:.3f} | {TEST['C']['recall']:.3f} | Q{TEST['C']['cost_q']:,.0f} |
+
+El candidato congelado es **{CANDIDATE}**. La caída de AUC-PR al permutar el
+historial fue {ORDER_DROP:.3f}, inferior al criterio previo de 0.01. En este
+experimento no se obtuvo evidencia suficiente para justificar una migración al
+modelo secuencial.
 
 ## Datos y reproducción
 
 El proyecto utiliza `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection). Los datos no se versionan.
 
 ```powershell
-python -m pip install -r requirements.txt
+python -m pip install -r configuracion/requirements.txt
 python -c "import kagglehub; kagglehub.login()"
-python src/download_data.py
-python src/proyecto1_pipeline.py
-python build_deliverables.py
-jupyter nbconvert --to notebook --execute --inplace proyecto1_calderon_barillas.ipynb
-pdflatex -interaction=nonstopmode informe.tex
+python codigo/download_data.py
+python codigo/proyecto1_pipeline.py
+python codigo/build_deliverables.py
+jupyter nbconvert --to notebook --execute --inplace entregables/cuaderno/proyecto1_calderon_barillas.ipynb
+Push-Location entregables/informe
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+pdflatex -interaction=nonstopmode -halt-on-error informe.tex
+Pop-Location
+python codigo/crear_ficha_repositorio.py
+python codigo/audit_project1.py
 ```
 
-Los CSV deben quedar en `data/raw/`. La semilla principal es 2026. El preprocesamiento se ajusta solo con entrenamiento. El test cronológico se abre después de congelar candidato y umbrales.
+Los CSV quedan en `datos/raw/`. La semilla principal es 2026. El preprocesamiento se ajusta solo con entrenamiento. El test cronológico se abre después de congelar candidato y umbrales.
 
 ## Tres decisiones técnicas importantes
 
@@ -411,13 +452,21 @@ Se utilizó IA para estructurar código, revisar consistencia, localizar bibliog
 ## Estructura
 
 ```text
-artefactos/  modelos, umbrales, esquema y métricas
-data/raw/    archivos Kaggle no versionados
-figuras/     evidencia visual reproducible
-src/         pipeline
+.github/                    README visible en GitHub
+artefactos/                 modelos, umbrales, esquema y métricas
+codigo/                     pipeline, descarga, construcción y auditoría
+configuracion/              dependencias reproducibles
+datos/raw/                  archivos Kaggle no versionados
+entregables/cuaderno/       notebook ejecutado
+entregables/informe/        fuente LaTeX y PDF
+entregables/presentacion/   presentación HTML y PDF
+entregables/ficha/          ficha DOCX del repositorio
+evidencia/figuras/          evidencia visual reproducible
+legal/                      licencia del repositorio
 ```
 """
-    output = ROOT / "README.md"
+    README_DIR.mkdir(parents=True, exist_ok=True)
+    output = README_DIR / "README.md"
     output.write_text(text, encoding="utf-8")
     return output
 
@@ -431,8 +480,12 @@ pandas>=2.2
 scikit-learn>=1.6
 torch>=2.6
 joblib>=1.4
+python-docx>=1.1
+qrcode[pil]>=8.0
+pymupdf>=1.25
 """
-    output = ROOT / "requirements.txt"
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    output = CONFIG_DIR / "requirements.txt"
     output.write_text(text, encoding="utf-8")
     return output
 
@@ -440,7 +493,7 @@ joblib>=1.4
 def build_data_manifest() -> Path:
     manifest = {"source": "Kaggle IEEE-CIS Fraud Detection", "files": {}}
     for name in ["train_transaction.csv", "train_identity.csv"]:
-        path = ROOT / "data" / "raw" / name
+        path = ROOT / "datos" / "raw" / name
         digest = hashlib.sha256()
         with path.open("rb") as handle:
             for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):

@@ -14,7 +14,7 @@ import kagglehub
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW = ROOT / "data" / "raw"
+RAW = ROOT / "datos" / "raw"
 HANDLE = "ieee-fraud-detection"
 FILES = ("train_transaction.csv", "train_identity.csv")
 

@@ -1,0 +1,3 @@
+raw/*.csv
+raw/kagglehub_cache/
+processed/

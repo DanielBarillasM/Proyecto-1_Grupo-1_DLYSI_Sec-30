@@ -1,6 +1,7 @@
 \documentclass[10pt]{article}
 \usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}
 \usepackage[margin=1.45cm]{geometry}\usepackage{graphicx,booktabs,tabularx,xcolor,hyperref}
+\graphicspath{{../../evidencia/figuras/}}
 \definecolor{navy}{HTML}{184E77}\definecolor{teal}{HTML}{2A9D8F}\definecolor{soft}{HTML}{EDF5FB}
 \hypersetup{colorlinks=true,linkcolor=navy,urlcolor=teal}\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
 \newcommand{\kpi}[1]{\colorbox{soft}{\strut\textbf{#1}}}
@@ -24,7 +25,7 @@ Validación & 88,581 & 3.434\% \\
 Prueba final & 88,581 & 3.480\% \\\bottomrule
 \end{tabular}\end{center}
 Los primeros 70\% del tiempo entrenan, 15\% validan y 15\% prueban. Normalización, vocabularios, parada, arquitectura y umbrales se ajustan sin prueba. El submuestreo computacional ocurre solo dentro de entrenamiento y conserva todos los positivos; ambos modelos usan la misma muestra.
-\begin{center}\includegraphics[width=.83\linewidth]{figuras/01_integridad_temporal.png}\end{center}
+\begin{center}\includegraphics[width=.83\linewidth]{01_integridad_temporal.png}\end{center}
 
 \section*{2. Núcleo A--B y apuesta C}
 \textbf{A} resume nivel, dispersión, extremos, recencia y diversidad, y usa HistGradientBoosting. \textbf{B} codifica diez variables numéricas y seis categóricas por evento mediante embeddings y GRU(32). Ambos generan riesgo continuo. \textbf{C} concatena el estado final de B con agregados estandarizados. La hipótesis previa exigió que C aumentara AUC-PR al menos 0.01 y redujera costo al menos 5\% frente a B en validación. El cambio observado fue -0.001 y 0.3\%; la apuesta fue \textbf{no útil según el criterio previo}.
@@ -36,15 +37,15 @@ B & 0.412 & 0.154 & 0.649 & 0.248 & Q6,525,960 \\
 C & 0.392 & 0.136 & 0.671 & 0.226 & Q6,618,900 \\
 \bottomrule\end{tabular}\end{center}
 AUC-PR es principal por el desbalance; precisión, recall y F1 se reportan en el umbral económico propio, fijado con validación. Exactitud no se usa para decidir.
-\begin{center}\includegraphics[width=.80\linewidth]{figuras/02_curvas_precision_recall.png}\end{center}
+\begin{center}\includegraphics[width=.80\linewidth]{02_curvas_precision_recall.png}\end{center}
 
 \section*{4. Intentos de refutar el valor del orden}
 Se permutó cinco veces solo la historia, manteniendo la transacción objetivo al final y todos los eventos intactos. B obtuvo AUC-PR 0.412 original y 0.410$\pm$0.001 permutada. La permutación solo cambió AUC-PR en 0.002; no se atribuye una ventaja material al orden. La segunda prueba recortó el historial a tres eventos y produjo AUC-PR 0.411. Estas pruebas miden dependencia predictiva, no causalidad ni identidad bancaria perfecta.
-\begin{center}\includegraphics[width=.75\linewidth]{figuras/03_falsificaciones_orden.png}\end{center}
+\begin{center}\includegraphics[width=.75\linewidth]{03_falsificaciones_orden.png}\end{center}
 
 \section*{5. Umbral, costo y decisión}
 Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para A, el costo de prueba es Q6,193,620, equivalente a Q6,992,041 por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q1,174,662,919 y el ahorro frente a A es Q0. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
-\begin{center}\includegraphics[width=.75\linewidth]{figuras/04_curva_costo_umbral.png}\end{center}
+\begin{center}\includegraphics[width=.75\linewidth]{04_curva_costo_umbral.png}\end{center}
 
 \section*{6. Recomendación, errores y límites}
 \textbf{Conservar A como candidato y no migrar aún a secuencias.} El puntaje debe priorizar revisión, no bloquear automáticamente. Los falsos negativos concentran Q4,200 y los falsos positivos deterioran experiencia y capacidad operativa. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.

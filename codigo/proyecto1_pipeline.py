@@ -74,10 +74,10 @@ def paths() -> dict[str, Path]:
     root = project_root()
     return {
         "root": root,
-        "raw": root / "data" / "raw",
-        "processed": root / "data" / "processed",
+        "raw": root / "datos" / "raw",
+        "processed": root / "datos" / "processed",
         "artifacts": root / "artefactos",
-        "figures": root / "figuras",
+        "figures": root / "evidencia" / "figuras",
     }
 
 
@@ -120,7 +120,7 @@ def resolve_raw_file(name: str) -> Path:
     cached = paths()["raw"] / "kagglehub_cache" / "competitions" / "ieee-fraud-detection" / name
     if cached.exists():
         return cached
-    raise FileNotFoundError(f"No se encontró {name}. Revise README.md.")
+    raise FileNotFoundError(f"No se encontró {name}. Revise .github/README.md.")
 
 
 def load_raw_data() -> pd.DataFrame:
