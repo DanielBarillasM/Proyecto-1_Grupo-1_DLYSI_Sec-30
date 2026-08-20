@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "commit_origen": "8dd0491",
+  "fecha_preservacion": "2026-08-20",
+  "proposito": "Congelar la evidencia original antes de construir V2.",
+  "nota": "Los resultados V1 se conservan sin reescritura para permitir comparación honesta y reproducible."
+}
