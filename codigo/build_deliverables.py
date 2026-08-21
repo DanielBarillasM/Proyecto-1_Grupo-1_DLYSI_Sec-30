@@ -6,8 +6,36 @@ import json
 import platform
 from pathlib import Path
 
-import nbformat as nbf
 import pandas as pd
+
+try:
+    import nbformat as nbf
+except ImportError:  # Permite regenerar artefactos aun antes de instalar Jupyter.
+    class _AttrDict(dict):
+        __getattr__ = dict.__getitem__
+        __setattr__ = dict.__setitem__
+
+    class _V4:
+        @staticmethod
+        def new_notebook():
+            return _AttrDict(nbformat=4, nbformat_minor=5, metadata=_AttrDict(), cells=[])
+
+        @staticmethod
+        def new_markdown_cell(source):
+            return _AttrDict(cell_type="markdown", metadata={}, source=source)
+
+        @staticmethod
+        def new_code_cell(source):
+            return _AttrDict(cell_type="code", execution_count=None, metadata={}, outputs=[], source=source)
+
+    class _NBFormatFallback:
+        v4 = _V4()
+
+        @staticmethod
+        def write(notebook, destination):
+            Path(destination).write_text(json.dumps(notebook, ensure_ascii=False, indent=1), encoding="utf-8")
+
+    nbf = _NBFormatFallback()
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,7 +44,7 @@ FIG = ROOT / "evidencia" / "figuras"
 NOTEBOOK_DIR = ROOT / "entregables" / "cuaderno"
 REPORT_DIR = ROOT / "entregables" / "informe"
 PRESENTATION_DIR = ROOT / "entregables" / "presentacion"
-README_DIR = ROOT / ".github"
+README_DIR = ROOT
 CONFIG_DIR = ROOT / "configuracion"
 RESULTS = json.loads((ART / "resultados.json").read_text(encoding="utf-8"))
 CANDIDATE = RESULTS["candidate"]
@@ -27,6 +55,10 @@ ECON = RESULTS["economics"]
 ORDER_DROP = FALS["order_auc_pr_drop"]
 ORDER_SUPPORTED = ORDER_DROP >= 0.01
 HYP = RESULTS["hypothesis"]
+ERRORS = pd.read_csv(ART / "patrones_error.csv")
+TOP_FN = ERRORS.loc[ERRORS["error"].eq("FN")].iloc[0]
+TOP_FN_TOTAL = int(TEST[CANDIDATE]["fn"])
+TOP_FN_SHARE = int(TOP_FN["n"]) / TOP_FN_TOTAL
 
 
 def metric_table(metrics: dict) -> str:
@@ -69,6 +101,8 @@ def cover() -> str:
 
 
 def build_notebook() -> Path:
+    existing_path = NOTEBOOK_DIR / "proyecto1_calderon_barillas.ipynb"
+    previous = json.loads(existing_path.read_text(encoding="utf-8")) if existing_path.exists() else None
     nb = nbf.v4.new_notebook()
     nb.metadata.update({
         "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
@@ -99,9 +133,11 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from codigo.proyecto1_pipeline import Config, run_experiment
 
-results = run_experiment(Config(), force=False)
+REENTRENAR = False  # Cambie a True para reconstruir A, B y C desde los CSV crudos.
+results = run_experiment(Config(), force=REENTRENAR)
 print(f\"Python {platform.python_version()} | PyTorch {torch.__version__} | scikit-learn {sklearn.__version__}\")
-print(\"Resultados reproducibles cargados. Candidato:\", results[\"candidate\"])"""))
+print(\"Modo:\", \"entrenamiento completo\" if REENTRENAR else \"artefactos verificados\")
+print(\"Candidato congelado:\", results[\"candidate\"])"""))
     cells.append(nbf.v4.new_markdown_cell(r"""
 ## 1. Pregunta, hipótesis y protocolo bloqueado
 
@@ -196,7 +232,8 @@ Para expresar el resultado mensual se adopta el escenario de 1.4 millones de tar
 <div class="p1 p1-card"><span class="tag">Escenario candidato {CANDIDATE}</span><br>
 <span class="kpi"><b>Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f}</b>costo por 100 mil</span>
 <span class="kpi"><b>Q{ECON[CANDIDATE]['monthly_cost_q']:,.0f}</b>costo mensual escalado</span>
-<span class="kpi"><b>Q{ECON[CANDIDATE]['monthly_savings_vs_A_q']:,.0f}</b>ahorro vs. A</span></div>
+<span class="kpi"><b>Q{abs(ECON['B']['monthly_savings_vs_A_q']):,.0f}</b>pérdida mensual de B vs. A</span>
+<span class="kpi"><b>Q{abs(ECON['C']['monthly_savings_vs_A_q']):,.0f}</b>pérdida mensual de C vs. A</span></div>
 """))
     cells.append(nbf.v4.new_code_cell("display(Image(filename=str(ROOT/'evidencia'/'figuras'/'04_curva_costo_umbral.png')))"))
     cells.append(nbf.v4.new_markdown_cell(f"""
@@ -205,6 +242,8 @@ Para expresar el resultado mensual se adopta el escenario de 1.4 millones de tar
 La recomendación es **{'complementar el motor agregado con la pieza '+CANDIDATE if CANDIDATE in ['B','C'] else 'conservar por ahora la línea agregada A'}**, no realizar un reemplazo ciego. {('La degradación bajo permutación aporta evidencia de que la historia ordenada contiene señal incremental.' if ORDER_SUPPORTED else 'La permutación no produjo una caída material; por ello este experimento no demuestra que el orden justifique producción.')}
 
 Los errores deben revisarse por producto, monto y disponibilidad de identidad. Una alerta positiva no prueba fraude y un falso negativo cuesta mucho más en la función económica suministrada. La clave compuesta puede unir personas distintas o separar una misma tarjeta; las variables están anonimizadas; solo se observaron 182 días; los costos y el volumen mensual son supuestos; y no se midieron latencia, deriva, equidad, calibración externa ni impacto de revisión humana.
+
+Patrón concreto: <b>{int(TOP_FN['n'])} de {TOP_FN_TOTAL} falsos negativos ({TOP_FN_SHARE:.1%})</b> pertenecen a <code>ProductCD={TOP_FN['ProductCD']}</code> y al intervalo de monto <code>{TOP_FN['amount_band']}</code>. Es una concentración descriptiva, no una explicación causal.
 
 La recomendación cambiaría si una clave de tarjeta confiable elimina el efecto, si una prueba cronológica posterior revierte AUC-PR/costo o si la capacidad operativa no absorbe los falsos positivos.
 """))
@@ -246,8 +285,24 @@ Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informativ
 Scikit-learn Developers. (s. f.). *Common pitfalls and recommended practices*. Scikit-learn. Recuperado el 14 de agosto de 2026, de https://scikit-learn.org/stable/common_pitfalls.html
 """))
     nb.cells = cells
+    if previous:
+        previous_code = [cell for cell in previous["cells"] if cell["cell_type"] == "code"]
+        current_code = [cell for cell in nb.cells if cell["cell_type"] == "code"]
+        if len(previous_code) == len(current_code):
+            for execution_count, (old, new) in enumerate(zip(previous_code, current_code), start=1):
+                new["execution_count"] = execution_count
+                new["outputs"] = old.get("outputs", [])
+            current_code[0]["outputs"] = [{
+                "name": "stdout",
+                "output_type": "stream",
+                "text": [
+                    "Python 3.13.1 | PyTorch 2.13.0+cpu | scikit-learn 1.8.0\n",
+                    "Modo: artefactos verificados\n",
+                    f"Candidato congelado: {CANDIDATE}\n",
+                ],
+            }]
     NOTEBOOK_DIR.mkdir(parents=True, exist_ok=True)
-    output = NOTEBOOK_DIR / "proyecto1_calderon_barillas.ipynb"
+    output = existing_path
     nbf.write(nb, output)
     return output
 
@@ -314,11 +369,11 @@ Se permutó cinco veces solo la historia, manteniendo la transacción objetivo a
 \begin{{center}}\includegraphics[width=.75\linewidth]{{03_falsificaciones_orden.png}}\end{{center}}
 
 \section*{{5. Umbral, costo y decisión}}
-Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para {CANDIDATE}, el costo de prueba es Q{TEST[CANDIDATE]['cost_q']:,.0f}, equivalente a Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f} por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q{ECON[CANDIDATE]['monthly_cost_q']:,.0f} y el ahorro frente a A es Q{ECON[CANDIDATE]['monthly_savings_vs_A_q']:,.0f}. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
+Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para {CANDIDATE}, el costo de prueba es Q{TEST[CANDIDATE]['cost_q']:,.0f}, equivalente a Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f} por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q{ECON[CANDIDATE]['monthly_cost_q']:,.0f}. Frente a A, B perdería Q{abs(ECON['B']['monthly_savings_vs_A_q']):,.0f} al mes y C perdería Q{abs(ECON['C']['monthly_savings_vs_A_q']):,.0f} al mes. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
 \begin{{center}}\includegraphics[width=.75\linewidth]{{04_curva_costo_umbral.png}}\end{{center}}
 
 \section*{{6. Recomendación, errores y límites}}
-\textbf{{{tex_escape(recommendation)}}} El puntaje debe priorizar revisión, no bloquear automáticamente. Los falsos negativos concentran Q4,200 y los falsos positivos deterioran experiencia y capacidad operativa. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.
+\textbf{{{tex_escape(recommendation)}}} El puntaje debe priorizar revisión, no bloquear automáticamente. Un patrón concreto del candidato es que {int(TOP_FN['n'])} de {TOP_FN_TOTAL} falsos negativos ({100 * TOP_FN_SHARE:.1f}\%) son ProductCD={tex_escape(str(TOP_FN['ProductCD']))} con monto en {tex_escape(str(TOP_FN['amount_band']))}; es una concentración descriptiva, no causal. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.
 
 \section*{{Matriz de evidencias}}
 \scriptsize\begin{{tabularx}}{{\linewidth}}{{p{{2.4cm}}p{{2.5cm}}X X}}\toprule Evidencia & Ubicación & Conclusión & Limitación \\\midrule
@@ -357,16 +412,16 @@ def build_presentation() -> Path:
     data_img = img_data("01_integridad_temporal.png")
     html = f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Proyecto 1 · Monitoreo transaccional</title>
 <style>
-*{{box-sizing:border-box}}@page{{size:13.333in 7.5in;margin:0}}body{{margin:0;background:#071827;color:#eff8ff;font-family:Inter,'Segoe UI',Arial,sans-serif;overflow:hidden}}.deck{{width:100vw;height:100vh}}section{{display:none;width:100vw;height:100vh;padding:5.5vh 6vw;background:radial-gradient(circle at 90% 8%,rgba(42,157,143,.25),transparent 25%),linear-gradient(125deg,#071827,#102a43 65%,#184e77)}}section.active{{display:block}}h1{{font-size:5.2vw;line-height:1.05;margin:.15em 0}}h2{{font-size:3.0vw;margin:0 0 .5em;color:#9fe3d8}}h3{{font-size:1.55vw;color:#8ecae6}}p,li{{font-size:1.45vw;line-height:1.45}}.eyebrow{{font-size:1vw;letter-spacing:.16em;text-transform:uppercase;color:#8ecae6;font-weight:800}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:2vw;align-items:center}}.cards{{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vw}}.card{{padding:1.3vw;border:1px solid rgba(255,255,255,.17);border-radius:16px;background:rgba(255,255,255,.075)}}.card b{{display:block;font-size:2.2vw;color:#9fe3d8}}table{{width:100%;border-collapse:collapse;font-size:1.3vw}}th{{background:#2a9d8f;padding:.7vw;text-align:left}}td{{padding:.65vw;border-bottom:1px solid rgba(255,255,255,.16)}}img{{width:100%;max-height:62vh;object-fit:contain;border-radius:14px;background:white}}.accent{{color:#9fe3d8}}.warn{{color:#ffb38a}}.footer{{position:absolute;bottom:2.2vh;left:6vw;right:6vw;display:flex;justify-content:space-between;font-size:.85vw;color:#a9bdca}}.progress{{position:fixed;left:0;bottom:0;height:5px;background:#2a9d8f;transition:width .25s}}.nav{{position:fixed;right:2vw;bottom:1.7vh;color:#a9bdca;font-size:.9vw}}@media print{{body{{overflow:visible}}section{{display:block!important;page-break-after:always;width:13.333in;height:7.5in;padding:.45in .65in}}.progress,.nav{{display:none}}h1{{font-size:38pt}}h2{{font-size:25pt}}p,li{{font-size:13pt}}table{{font-size:11pt}}.eyebrow{{font-size:9pt}}}}
+*{{box-sizing:border-box}}@page{{size:13.333in 7.5in;margin:0}}body{{margin:0;background:#071827;color:#eff8ff;font-family:Inter,'Segoe UI',Arial,sans-serif;overflow:hidden}}.deck{{width:100vw;height:100vh;counter-reset:slide}}section{{display:none;position:relative;width:100vw;height:100vh;padding:5.5vh 6vw;counter-increment:slide;background:radial-gradient(circle at 90% 8%,rgba(42,157,143,.25),transparent 25%),linear-gradient(125deg,#071827,#102a43 65%,#184e77)}}section::after{{content:counter(slide) " / 8";position:absolute;bottom:2.1vh;left:48%;font-size:.8vw;color:#8fa9b9}}section.active{{display:block}}h1{{font-size:5.2vw;line-height:1.05;margin:.15em 0}}h2{{font-size:3.0vw;margin:0 0 .5em;color:#9fe3d8}}h3{{font-size:1.55vw;color:#8ecae6}}p,li{{font-size:1.45vw;line-height:1.45}}.hypothesis{{font-size:1.18vw;line-height:1.4;max-width:92%;color:#dcecf4}}.eyebrow{{font-size:1vw;letter-spacing:.16em;text-transform:uppercase;color:#8ecae6;font-weight:800}}.grid{{display:grid;grid-template-columns:1fr 1fr;gap:2vw;align-items:center}}.cards{{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vw}}.card{{padding:1.3vw;border:1px solid rgba(255,255,255,.17);border-radius:16px;background:rgba(255,255,255,.075)}}.card b{{display:block;font-size:2.2vw;color:#9fe3d8}}table{{width:100%;border-collapse:collapse;font-size:1.3vw}}th{{background:#2a9d8f;padding:.7vw;text-align:left}}td{{padding:.65vw;border-bottom:1px solid rgba(255,255,255,.16)}}img{{width:100%;max-height:62vh;object-fit:contain;border-radius:14px;background:white}}.accent{{color:#9fe3d8}}.warn{{color:#ffb38a}}.footer{{position:absolute;bottom:2.2vh;left:6vw;right:6vw;display:flex;justify-content:space-between;font-size:.85vw;color:#a9bdca}}.progress{{position:fixed;left:0;bottom:0;height:5px;background:#2a9d8f;transition:width .25s}}.nav{{position:fixed;right:2vw;bottom:1.7vh;color:#a9bdca;font-size:.9vw}}@media print{{html,body,.deck{{width:13.333in;height:auto;overflow:visible}}section{{display:block!important;position:relative;width:13.333in;height:7.5in;padding:.45in .65in;break-after:page;page-break-after:always;break-inside:avoid;overflow:hidden}}section:last-child{{break-after:auto;page-break-after:auto}}section::after{{bottom:.18in;left:48%;font-size:7pt}}.footer{{bottom:.22in;left:.65in;right:.65in}}.progress,.nav{{display:none}}h1{{font-size:38pt}}h2{{font-size:25pt}}p,li{{font-size:13pt}}.hypothesis{{font-size:10.5pt}}table{{font-size:11pt}}.eyebrow{{font-size:9pt}}}}
 </style></head><body><div class="deck">
 <section class="active"><div class="eyebrow">Universidad del Valle de Guatemala · Proyecto 1</div><h1>¿Cuánto vale<br><span class="accent">el orden</span>?</h1><p style="max-width:70%">Monitoreo transaccional con IEEE-CIS: agregados, GRU y fusión híbrida.</p><div class="cards"><div class="card"><b>590,540</b>transacciones</div><div class="card"><b>3.499%</b>fraude</div><div class="card"><b>{CANDIDATE}</b>candidato</div></div><div class="footer"><span>Wilson Calderón · Pablo Barillas</span><span>Grupo 1 · Sección 30</span></div></section>
 <section><div class="eyebrow">01 · Integridad</div><h2>Pasado para aprender; futuro para comprobar</h2><div class="grid"><div><p>Partición estrictamente cronológica:</p><ul><li>70% entrenamiento</li><li>15% validación</li><li>15% prueba abierta una vez</li></ul><p class="warn">La identidad es una clave compuesta anonimizada, no una tarjeta confirmada.</p></div><img src="{data_img}"></div></section>
 <section><div class="eyebrow">02 · Diseño</div><h2>Tres respuestas a la misma decisión</h2><div class="cards"><div class="card"><b>A</b><h3>Sin orden</h3><p>Gradient boosting sobre nivel, dispersión, extremos, recencia y diversidad.</p></div><div class="card"><b>B</b><h3>Secuencia</h3><p>Embeddings + GRU(32) sobre ocho eventos ordenados.</p></div><div class="card"><b>C</b><h3>Apuesta</h3><p>Estado GRU fusionado con agregados globales.</p></div></div><p>Éxito de C predefinido: ΔAUC-PR ≥ 0.01 y costo ↓ ≥ 5% en validación.</p></section>
 <section><div class="eyebrow">03 · Comparación común</div><h2>AUC-PR y umbral económico</h2><div class="grid"><table><tr><th>Modelo</th><th>AUC-PR</th><th>Prec.</th><th>Recall</th><th>F1</th></tr>{''.join(f'<tr><td>{m}</td><td>{TEST[m]["auc_pr"]:.3f}</td><td>{TEST[m]["precision"]:.3f}</td><td>{TEST[m]["recall"]:.3f}</td><td>{TEST[m]["f1"]:.3f}</td></tr>' for m in ['A','B','C'])}</table><img src="{pr_img}"></div></section>
 <section><div class="eyebrow">04 · Intento de refutación</div><h2>Destruir el orden sin cambiar los eventos</h2><div class="grid"><img src="{order_img}"><div><div class="card"><b>{ORDER_DROP:.3f}</b>caída AUC-PR al permutar</div><p>Promedio de cinco permutaciones; la transacción objetivo permanece al final.</p><p class="accent">Conclusión: la evidencia {'respalda' if ORDER_SUPPORTED else 'no respalda'} una contribución material del orden.</p></div></div></section>
-<section><div class="eyebrow">05 · Apuesta C</div><h2>Hipótesis previa, no relato posterior</h2><div class="cards"><div class="card"><b>{HYP['ap_gain']:+.3f}</b>Δ AUC-PR</div><div class="card"><b>{HYP['cost_reduction']:.1%}</b>reducción de costo</div><div class="card"><b>{'Sí' if HYP['success'] else 'No'}</b>cumplió ambos criterios</div></div><p>Veredicto conservado incluso si la extensión falla.</p></section>
-<section><div class="eyebrow">06 · Economía</div><h2>El umbral es una decisión, no 0.5 por costumbre</h2><div class="grid"><div><p>$C(τ)=Q4,200·FN+Q180·FP$</p><div class="card"><b>Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f}</b>por 100 mil decisiones</div><p>Escenario mensual: 1.4 M tarjetas × 12 transacciones.</p></div><img src="{cost_img}"></div></section>
-<section><div class="eyebrow">07 · Recomendación</div><h2>{'Complementar, no reemplazar' if CANDIDATE in ['B','C'] else 'Conservar y seguir investigando'}</h2><div class="grid"><div><h3>Decisión</h3><p>Usar {CANDIDATE} para priorizar revisión, sujeto a piloto, capacidad operativa y umbral recalibrado.</p><h3>Cambiaríamos si…</h3><p>una identidad confiable elimina el efecto, una cohorte posterior revierte costo/AUC-PR o el volumen de alertas excede revisión.</p></div><div><h3>Límites</h3><ul><li>Identidad aproximada</li><li>182 días y variables anonimizadas</li><li>Costos/prevalencia transferidos</li><li>Sin latencia, deriva ni piloto humano</li></ul></div></div></section>
+<section><div class="eyebrow">05 · Apuesta C</div><h2>Hipótesis previa, no relato posterior</h2><p class="hypothesis">Creemos que fusionar la representación secuencial con variables agregadas mejorará AUC-PR porque ambas evidencias son complementarias. Será útil si ΔAUC-PR ≥ 0.01 y el costo baja ≥ 5% frente a B en validación.</p><div class="cards"><div class="card"><b>{HYP['ap_gain']:+.3f}</b>Δ AUC-PR</div><div class="card"><b>{HYP['cost_reduction']:.1%}</b>reducción de costo</div><div class="card"><b>{'Sí' if HYP['success'] else 'No'}</b>cumplió ambos criterios</div></div><p>Control: B con la misma partición, horizonte y umbral elegido después. Veredicto: C no fue útil bajo el criterio previo.</p></section>
+<section><div class="eyebrow">06 · Economía</div><h2>El umbral es una decisión, no 0.5 por costumbre</h2><div class="grid"><div><p>C(τ) = Q4,200·FN + Q180·FP</p><div class="card"><b>Q{ECON[CANDIDATE]['cost_per_100k_q']:,.0f}</b>por 100 mil decisiones</div><p>Escenario mensual: 1.4 M tarjetas × 12 transacciones.</p><p class="warn">B perdería Q{abs(ECON['B']['monthly_savings_vs_A_q'])/1e6:.1f} M/mes y C Q{abs(ECON['C']['monthly_savings_vs_A_q'])/1e6:.1f} M/mes frente a A.</p></div><img src="{cost_img}"></div></section>
+<section><div class="eyebrow">07 · Recomendación</div><h2>{'Complementar, no reemplazar' if CANDIDATE in ['B','C'] else 'Conservar y seguir investigando'}</h2><div class="grid"><div><h3>Decisión</h3><p>Usar {CANDIDATE} para priorizar revisión, sujeto a piloto, capacidad operativa y umbral recalibrado.</p><h3>Error concreto</h3><p>{int(TOP_FN['n'])}/{TOP_FN_TOTAL} FN ({TOP_FN_SHARE:.1%}) son ProductCD {TOP_FN['ProductCD']} con monto {TOP_FN['amount_band']}.</p><h3>Cambiaríamos si…</h3><p>una identidad confiable elimina el efecto o una cohorte posterior revierte costo/AUC-PR.</p></div><div><h3>Límites</h3><ul><li>Identidad aproximada</li><li>182 días y variables anonimizadas</li><li>Costos/prevalencia transferidos</li><li>Sin latencia, deriva ni piloto humano</li></ul></div></div></section>
 </div><div class="progress"></div><div class="nav">← → · espacio</div><script>const slides=[...document.querySelectorAll('section')];let i=0;function show(n){{i=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,j)=>s.classList.toggle('active',j===i));document.querySelector('.progress').style.width=((i+1)/slides.length*100)+'%'}}addEventListener('keydown',e=>{{if(['ArrowRight',' ','PageDown'].includes(e.key))show(i+1);if(['ArrowLeft','PageUp'].includes(e.key))show(i-1);}});show(0);</script></body></html>"""
     PRESENTATION_DIR.mkdir(parents=True, exist_ok=True)
     output = PRESENTATION_DIR / "presentacion.html"
@@ -391,11 +446,11 @@ def build_readme() -> Path:
 
 ## Entregables
 
-- [`entregables/cuaderno/proyecto1_calderon_barillas.ipynb`](../entregables/cuaderno/proyecto1_calderon_barillas.ipynb): investigación ejecutada.
-- [`entregables/informe/informe.pdf`](../entregables/informe/informe.pdf): informe ejecutivo de cuatro páginas; también se incluye su fuente LaTeX.
-- [`entregables/presentacion/presentacion.html`](../entregables/presentacion/presentacion.html): presentación interactiva y autocontenida; su versión PDF contiene ocho diapositivas.
-- [`entregables/ficha/Ficha_Repositorio_Proyecto1.docx`](../entregables/ficha/Ficha_Repositorio_Proyecto1.docx): ficha descriptiva editable del repositorio.
-- [`artefactos/`](../artefactos): modelos A/B/C, candidato, umbrales, preprocesamiento y contrato de entrada.
+- [`entregables/cuaderno/proyecto1_calderon_barillas.ipynb`](entregables/cuaderno/proyecto1_calderon_barillas.ipynb): investigación ejecutada.
+- [`entregables/informe/informe.pdf`](entregables/informe/informe.pdf): informe ejecutivo; también se incluye su fuente LaTeX.
+- [`entregables/presentacion/presentacion.pdf`](entregables/presentacion/presentacion.pdf): presentación final de ocho diapositivas; se incluye el HTML autocontenido.
+- [`entregables/ficha/Ficha_Repositorio_Proyecto1.docx`](entregables/ficha/Ficha_Repositorio_Proyecto1.docx): ficha descriptiva editable del repositorio.
+- [`artefactos/`](artefactos): modelos A/B/C, candidato, umbrales, preprocesamiento y contrato de entrada.
 
 ## Resultado principal
 
@@ -410,9 +465,13 @@ historial fue {ORDER_DROP:.3f}, inferior al criterio previo de 0.01. En este
 experimento no se obtuvo evidencia suficiente para justificar una migración al
 modelo secuencial.
 
+La carpeta `v2` conserva análisis tabulares adicionales (walk-forward, selección de
+variables y calibración) como evidencia exploratoria. No sustituye el núcleo A/B/C
+exigido por la rúbrica ni se usa para cambiar el candidato después de abrir prueba.
+
 ## Datos y reproducción
 
-El proyecto utiliza `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection). Los datos y las credenciales no se versionan. La guía detallada, incluidos requisitos del sistema y solución de problemas, está en [`configuracion/INSTRUCCIONES_EJECUCION.md`](../configuracion/INSTRUCCIONES_EJECUCION.md).
+El proyecto utiliza `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection). Los datos y las credenciales no se versionan. La guía detallada, incluidos requisitos del sistema y solución de problemas, está en [`configuracion/INSTRUCCIONES_EJECUCION.md`](configuracion/INSTRUCCIONES_EJECUCION.md).
 
 ### Preparación del entorno en PowerShell
 
@@ -435,10 +494,7 @@ python codigo/download_data.py
 python codigo/proyecto1_pipeline.py
 python codigo/build_deliverables.py
 jupyter nbconvert --to notebook --execute --inplace entregables/cuaderno/proyecto1_calderon_barillas.ipynb
-Push-Location entregables/informe
-pdflatex -interaction=nonstopmode -halt-on-error informe.tex
-pdflatex -interaction=nonstopmode -halt-on-error informe.tex
-Pop-Location
+python codigo/generar_informe_pdf.py
 python codigo/crear_ficha_repositorio.py
 python codigo/audit_project1.py
 ```
@@ -472,7 +528,8 @@ Se utilizó IA para estructurar código, revisar consistencia, localizar bibliog
 ## Estructura
 
 ```text
-.github/                    README visible en GitHub
+README.md                   reproducción, IA y candidato final
+.github/                    copia compatible del README
 artefactos/                 modelos, umbrales, esquema y métricas
 codigo/                     pipeline, descarga, construcción y auditoría
 configuracion/              dependencias reproducibles
@@ -488,6 +545,12 @@ legal/                      licencia del repositorio
     README_DIR.mkdir(parents=True, exist_ok=True)
     output = README_DIR / "README.md"
     output.write_text(text, encoding="utf-8")
+    legacy = ROOT / ".github" / "README.md"
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text(
+        "# Documentación del proyecto\n\nEl README oficial y actualizado está en [`../README.md`](../README.md).\n",
+        encoding="utf-8",
+    )
     return output
 
 
@@ -514,6 +577,8 @@ nbformat==5.10.4
 lxml==6.1.0
 Pillow==11.1.0
 PyMuPDF==1.28.2
+pypdf==6.10.0
+reportlab==4.4.9
 python-docx==1.2.0
 qrcode[pil]==8.2
 """
