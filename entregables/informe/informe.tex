@@ -44,11 +44,11 @@ Se permutó cinco veces solo la historia, manteniendo la transacción objetivo a
 \begin{center}\includegraphics[width=.75\linewidth]{03_falsificaciones_orden.png}\end{center}
 
 \section*{5. Umbral, costo y decisión}
-Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para A, el costo de prueba es Q6,193,620, equivalente a Q6,992,041 por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q1,174,662,919 y el ahorro frente a A es Q0. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
+Se minimizó en validación $C(\tau)=4200FN(\tau)+180FP(\tau)$. Para A, el costo de prueba es Q6,193,620, equivalente a Q6,992,041 por 100 mil decisiones. Con 1.4 millones de tarjetas y 12 transacciones mensuales, el escenario escalado es Q1,174,662,919. Frente a A, B perdería Q63,030,582 al mes y C perdería Q80,657,297 al mes. La prevalencia y el volumen reales deben reemplazar estos supuestos antes de una decisión financiera.
 \begin{center}\includegraphics[width=.75\linewidth]{04_curva_costo_umbral.png}\end{center}
 
 \section*{6. Recomendación, errores y límites}
-\textbf{Conservar A como candidato y no migrar aún a secuencias.} El puntaje debe priorizar revisión, no bloquear automáticamente. Los falsos negativos concentran Q4,200 y los falsos positivos deterioran experiencia y capacidad operativa. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.
+\textbf{Conservar A como candidato y no migrar aún a secuencias.} El puntaje debe priorizar revisión, no bloquear automáticamente. Un patrón concreto del candidato es que 222 de 858 falsos negativos (25.9\%) son ProductCD=W con monto en (68.5, 117.0]; es una concentración descriptiva, no causal. Cambiaríamos la recomendación si una clave de tarjeta confiable elimina el efecto, si una cohorte posterior revierte AUC-PR/costo o si revisión no absorbe alertas. Límites: identidad aproximada, anonimización, 182 días, una ventana, costos transferidos, ausencia de latencia, calibración externa, deriva, equidad y piloto humano.
 
 \section*{Matriz de evidencias}
 \scriptsize\begin{tabularx}{\linewidth}{p{2.4cm}p{2.5cm}X X}\toprule Evidencia & Ubicación & Conclusión & Limitación \\\midrule
