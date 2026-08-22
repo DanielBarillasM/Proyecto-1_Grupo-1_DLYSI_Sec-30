@@ -1,0 +1,362 @@
+{
+  "project": "Monitoreo transaccional: detectar lo que el orden revela",
+  "dataset": {
+    "source": "Kaggle IEEE-CIS Fraud Detection / Vesta Corporation",
+    "rows": 590540,
+    "frauds": 20663,
+    "fraud_rate": 0.03499000914417313,
+    "time_span_days": 181.99920138888888,
+    "entity_proxy": [
+      "card1",
+      "card2",
+      "card3",
+      "card5",
+      "addr1"
+    ],
+    "identity_is_approximate": true
+  },
+  "splits": {
+    "train_population": {
+      "n": 413378,
+      "fraud_rate": 0.03516878014795175
+    },
+    "train_modeling": {
+      "n": 180000,
+      "fraud_rate": 0.08076666666666667
+    },
+    "validation": {
+      "n": 88581,
+      "fraud_rate": 0.03434145019812375
+    },
+    "test": {
+      "n": 88581,
+      "fraud_rate": 0.03480430340592226
+    },
+    "cutoffs": {
+      "train_cutoff": 10437998.1,
+      "val_cutoff": 13151845.999999998
+    }
+  },
+  "hypothesis": {
+    "statement": "Creemos que fusionar la representación secuencial de la GRU con variables agregadas mejorará el AUC-PR porque la evidencia temporal y global es complementaria. Lo consideraremos útil si aumenta AUC-PR al menos 0.01 y reduce el costo al menos 5% en validación.",
+    "ap_gain": -0.0012607413388163735,
+    "cost_reduction": 0.0026967237092291943,
+    "success": false
+  },
+  "validation": {
+    "A": {
+      "auc_pr": 0.44309876058643477,
+      "precision": 0.15406324625515594,
+      "recall": 0.6998685075608152,
+      "f1": 0.2525354368068323,
+      "tn": 73849,
+      "fp": 11690,
+      "fn": 913,
+      "tp": 2129,
+      "cost_q": 5938800.0,
+      "cost_per_decision_q": 67.04372269448301
+    },
+    "B": {
+      "auc_pr": 0.40286857840012713,
+      "precision": 0.16240485760711537,
+      "recall": 0.6242603550295858,
+      "f1": 0.25775364777740073,
+      "tn": 75745,
+      "fp": 9794,
+      "fn": 1143,
+      "tp": 1899,
+      "cost_q": 6563520.0,
+      "cost_per_decision_q": 74.09625088901683
+    },
+    "C": {
+      "auc_pr": 0.40160783706131076,
+      "precision": 0.1510863682053661,
+      "recall": 0.6423405654174885,
+      "f1": 0.24463223787167448,
+      "tn": 74560,
+      "fp": 10979,
+      "fn": 1088,
+      "tp": 1954,
+      "cost_q": 6545820.0,
+      "cost_per_decision_q": 73.89643377247943
+    }
+  },
+  "thresholds": {
+    "A": {
+      "threshold": 0.03469585239413547,
+      "cost": 5938800.0,
+      "tn": 73849,
+      "fp": 11690,
+      "fn": 913,
+      "tp": 2129
+    },
+    "B": {
+      "threshold": 0.586024968624115,
+      "cost": 6563520.0,
+      "tn": 75745,
+      "fp": 9794,
+      "fn": 1143,
+      "tp": 1899
+    },
+    "C": {
+      "threshold": 0.5514110398292541,
+      "cost": 6545820.0,
+      "tn": 74560,
+      "fp": 10979,
+      "fn": 1088,
+      "tp": 1954
+    }
+  },
+  "candidate": "A",
+  "test": {
+    "A": {
+      "auc_pr": 0.42850380972380175,
+      "precision": 0.13392319730347899,
+      "recall": 0.7216996432046707,
+      "f1": 0.22592272934964716,
+      "tn": 71109,
+      "fp": 14389,
+      "fn": 858,
+      "tp": 2225,
+      "cost_q": 6193620.0,
+      "cost_per_decision_q": 69.92041182646392
+    },
+    "B": {
+      "auc_pr": 0.41213824825180356,
+      "precision": 0.1535982814178303,
+      "recall": 0.6493674991891015,
+      "f1": 0.2484333312651238,
+      "tn": 74466,
+      "fp": 11032,
+      "fn": 1081,
+      "tp": 2002,
+      "cost_q": 6525960.0,
+      "cost_per_decision_q": 73.67223219426288
+    },
+    "C": {
+      "auc_pr": 0.39162161116641714,
+      "precision": 0.13613942781979613,
+      "recall": 0.6714239377229971,
+      "f1": 0.2263779527559055,
+      "tn": 72363,
+      "fp": 13135,
+      "fn": 1013,
+      "tp": 2070,
+      "cost_q": 6618900.0,
+      "cost_per_decision_q": 74.7214413926237
+    }
+  },
+  "falsification": {
+    "original_B": {
+      "auc_pr": 0.41213824825180356,
+      "precision": 0.1535982814178303,
+      "recall": 0.6493674991891015,
+      "f1": 0.2484333312651238,
+      "tn": 74466,
+      "fp": 11032,
+      "fn": 1081,
+      "tp": 2002,
+      "cost_q": 6525960.0,
+      "cost_per_decision_q": 73.67223219426288
+    },
+    "permutation_auc_pr": [
+      0.40977298879388646,
+      0.4116454167396406,
+      0.40974759235486546,
+      0.4097828465538038,
+      0.41105901569917047
+    ],
+    "permutation_mean_auc_pr": 0.4104015720282733,
+    "permutation_std_auc_pr": 0.0007981239696863528,
+    "permutation_metrics": [
+      {
+        "auc_pr": 0.40977298879388646,
+        "precision": 0.16058575328865723,
+        "recall": 0.6295815763866364,
+        "f1": 0.2558998022412657,
+        "tn": 75352,
+        "fp": 10146,
+        "fn": 1142,
+        "tp": 1941,
+        "cost_q": 6622680.0,
+        "cost_per_decision_q": 74.7641142005622
+      },
+      {
+        "auc_pr": 0.4116454167396406,
+        "precision": 0.16040927469263142,
+        "recall": 0.6305546545572495,
+        "f1": 0.2557558216024207,
+        "tn": 75323,
+        "fp": 10175,
+        "fn": 1139,
+        "tp": 1944,
+        "cost_q": 6615300.0,
+        "cost_per_decision_q": 74.68080062315846
+      },
+      {
+        "auc_pr": 0.40974759235486546,
+        "precision": 0.16066550782220015,
+        "recall": 0.6295815763866364,
+        "f1": 0.2560010551305724,
+        "tn": 75358,
+        "fp": 10140,
+        "fn": 1142,
+        "tp": 1941,
+        "cost_q": 6621600.0,
+        "cost_per_decision_q": 74.75192196972263
+      },
+      {
+        "auc_pr": 0.4097828465538038,
+        "precision": 0.15965834428383704,
+        "recall": 0.6305546545572495,
+        "f1": 0.2548004456386395,
+        "tn": 75266,
+        "fp": 10232,
+        "fn": 1139,
+        "tp": 1944,
+        "cost_q": 6625560.0,
+        "cost_per_decision_q": 74.79662681613439
+      },
+      {
+        "auc_pr": 0.41105901569917047,
+        "precision": 0.16146349520977865,
+        "recall": 0.6341226078494973,
+        "f1": 0.2573892436310974,
+        "tn": 75345,
+        "fp": 10153,
+        "fn": 1128,
+        "tp": 1955,
+        "cost_q": 6565140.0,
+        "cost_per_decision_q": 74.11453923527618
+      }
+    ],
+    "truncated_to_3": {
+      "auc_pr": 0.4107619912654063,
+      "precision": 0.18582489577129244,
+      "recall": 0.6072007784625365,
+      "f1": 0.28456335030782093,
+      "tn": 77296,
+      "fp": 8202,
+      "fn": 1211,
+      "tp": 1872,
+      "cost_q": 6562560.0,
+      "cost_per_decision_q": 74.08541335049277
+    },
+    "order_auc_pr_drop": 0.0017366762235302424
+  },
+  "economics": {
+    "A": {
+      "monthly_decisions": 16800000,
+      "monthly_cost_q": 1174662918.684594,
+      "cost_per_100k_q": 6992041.182646392,
+      "monthly_savings_vs_A_q": 0.0
+    },
+    "B": {
+      "monthly_decisions": 16800000,
+      "monthly_cost_q": 1237693500.8636162,
+      "cost_per_100k_q": 7367223.219426287,
+      "monthly_savings_vs_A_q": -63030582.17902231
+    },
+    "C": {
+      "monthly_decisions": 16800000,
+      "monthly_cost_q": 1255320215.396078,
+      "cost_per_100k_q": 7472144.13926237,
+      "monthly_savings_vs_A_q": -80657296.7114842
+    }
+  },
+  "training": {
+    "B": [
+      {
+        "epoch": 1,
+        "loss": 1.0018569535573323,
+        "val_auc_pr": 0.3680511326988001
+      },
+      {
+        "epoch": 2,
+        "loss": 0.8878874152183532,
+        "val_auc_pr": 0.39291944935935474
+      },
+      {
+        "epoch": 3,
+        "loss": 0.850779627556271,
+        "val_auc_pr": 0.3943834237004054
+      },
+      {
+        "epoch": 4,
+        "loss": 0.8231438567797343,
+        "val_auc_pr": 0.40000150188103745
+      },
+      {
+        "epoch": 5,
+        "loss": 0.800633545811971,
+        "val_auc_pr": 0.40286857840012713
+      },
+      {
+        "epoch": 6,
+        "loss": 0.7789802697605557,
+        "val_auc_pr": 0.3942911165222187
+      }
+    ],
+    "C": [
+      {
+        "epoch": 1,
+        "loss": 0.9618713534990947,
+        "val_auc_pr": 0.38215668928288915
+      },
+      {
+        "epoch": 2,
+        "loss": 0.8717015550295512,
+        "val_auc_pr": 0.39380958467540517
+      },
+      {
+        "epoch": 3,
+        "loss": 0.838123489051395,
+        "val_auc_pr": 0.3974516236421295
+      },
+      {
+        "epoch": 4,
+        "loss": 0.817841514354282,
+        "val_auc_pr": 0.40160783706131076
+      },
+      {
+        "epoch": 5,
+        "loss": 0.7942419386121962,
+        "val_auc_pr": 0.4011516894904771
+      },
+      {
+        "epoch": 6,
+        "loss": 0.7743890714751349,
+        "val_auc_pr": 0.39317561251921823
+      }
+    ],
+    "seconds_total": 551.2447699999902
+  },
+  "reproducibility": {
+    "config": {
+      "seed": 2026,
+      "seq_len": 8,
+      "train_fraction": 0.7,
+      "val_fraction": 0.15,
+      "max_train_targets": 180000,
+      "batch_size": 512,
+      "epochs": 6,
+      "patience": 2,
+      "hidden_size": 32,
+      "learning_rate": 0.002,
+      "min_category_frequency": 20,
+      "max_categories": 120,
+      "cost_fn_q": 4200.0,
+      "cost_fp_q": 180.0,
+      "cards_bank": 1400000,
+      "transactions_per_card_month": 12,
+      "hypothesis_ap_gain": 0.01,
+      "hypothesis_cost_reduction": 0.05
+    },
+    "sampling": {
+      "positive": 1.0,
+      "negative": 2.4104628253012774,
+      "train_population": 413378,
+      "train_selected": 180000
+    }
+  }
+}
