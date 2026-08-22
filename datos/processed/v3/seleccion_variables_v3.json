@@ -1,0 +1,485 @@
+{
+  "numericas": [
+    "TransactionAmt",
+    "missing_count",
+    "entity_prior_count",
+    "entity_prior_amt_mean",
+    "entity_prior_amt_std",
+    "amount_to_prior_mean",
+    "hours_since_prior",
+    "entity_count_1h",
+    "entity_count_6h",
+    "entity_count_24h",
+    "entity_count_72h",
+    "hour_sin",
+    "hour_cos",
+    "weekday_sin",
+    "weekday_cos",
+    "V244",
+    "V242",
+    "V257",
+    "V243",
+    "V246",
+    "V258",
+    "V201",
+    "V187",
+    "V200",
+    "V190",
+    "V186",
+    "V189",
+    "V199",
+    "V188",
+    "V233",
+    "V232",
+    "V231",
+    "V45",
+    "V156",
+    "V230",
+    "V217",
+    "V229",
+    "V149",
+    "V158",
+    "V171",
+    "V219",
+    "V218",
+    "V228",
+    "V87",
+    "V86",
+    "V265",
+    "V264",
+    "V179",
+    "V44",
+    "V178",
+    "V252",
+    "V263",
+    "V170",
+    "V247",
+    "V177",
+    "V249",
+    "V254",
+    "V155",
+    "V147",
+    "V52",
+    "V176",
+    "V168",
+    "V157",
+    "V148",
+    "V248",
+    "V204",
+    "V203",
+    "V167",
+    "V253",
+    "V202",
+    "V154",
+    "V51",
+    "V140",
+    "D7",
+    "V192",
+    "V40",
+    "V38",
+    "V79",
+    "V196",
+    "V146",
+    "D8",
+    "V193",
+    "V47",
+    "V222",
+    "V74",
+    "V94",
+    "V33",
+    "V17",
+    "V34",
+    "V23",
+    "V93",
+    "V236",
+    "V42",
+    "V191",
+    "V259",
+    "V81",
+    "V198",
+    "C12",
+    "id_17",
+    "V73",
+    "V50",
+    "V197",
+    "V37",
+    "V72",
+    "V123",
+    "V278",
+    "V84",
+    "V78",
+    "C4",
+    "V239",
+    "V195",
+    "V60",
+    "V261",
+    "V63",
+    "V77",
+    "V139",
+    "C8",
+    "V24",
+    "V221",
+    "C10",
+    "V125",
+    "V262",
+    "V194",
+    "V234",
+    "V276",
+    "V185",
+    "V111",
+    "id_01",
+    "V238",
+    "V260",
+    "V46",
+    "V103",
+    "V303",
+    "V141",
+    "V163",
+    "V162",
+    "V90",
+    "V102",
+    "V91",
+    "D3",
+    "V48",
+    "V302",
+    "V49",
+    "V294",
+    "V30",
+    "V184",
+    "V29",
+    "V113",
+    "V70",
+    "V69",
+    "V101",
+    "V216",
+    "V295",
+    "V215",
+    "V180",
+    "V283",
+    "V112",
+    "D2",
+    "C5",
+    "C2",
+    "V282",
+    "V214",
+    "V124",
+    "D14",
+    "V108",
+    "V150",
+    "V95",
+    "V245",
+    "C11",
+    "V316",
+    "V67",
+    "V62",
+    "V56",
+    "C1",
+    "V333",
+    "V332",
+    "V324",
+    "V306",
+    "V10",
+    "V11",
+    "V323",
+    "V110",
+    "V83",
+    "V292",
+    "V280",
+    "C9",
+    "D10",
+    "V308",
+    "V114",
+    "V97",
+    "D12",
+    "V152",
+    "D15",
+    "V128",
+    "V281",
+    "V138",
+    "id_02",
+    "V331",
+    "V290",
+    "id_32",
+    "V55",
+    "V159",
+    "C6",
+    "C13",
+    "V151",
+    "V35",
+    "V109",
+    "V116",
+    "id_06",
+    "V256",
+    "V145",
+    "V160",
+    "V165",
+    "V5",
+    "V271",
+    "V3",
+    "V36",
+    "V272",
+    "D1",
+    "id_04"
+  ],
+  "categoricas": [
+    "R_emaildomain",
+    "id_31",
+    "ProductCD",
+    "id_36",
+    "DeviceType",
+    "id_37",
+    "id_28",
+    "id_15",
+    "id_35",
+    "id_29",
+    "id_38",
+    "id_12",
+    "M6",
+    "M4",
+    "id_16",
+    "DeviceInfo",
+    "card6",
+    "M2",
+    "M3",
+    "M1",
+    "P_emaildomain",
+    "M8",
+    "M9",
+    "M7"
+  ],
+  "n_numericas": 220,
+  "n_categoricas": 24,
+  "umbral_redundancia": 0.995,
+  "redundantes_eliminadas": [
+    {
+      "variable": "V274",
+      "retenida": "V232",
+      "rho_spearman_abs": 0.9969592971098445
+    },
+    {
+      "variable": "V275",
+      "retenida": "V233",
+      "rho_spearman_abs": 0.9974001798908851
+    },
+    {
+      "variable": "V273",
+      "retenida": "V231",
+      "rho_spearman_abs": 0.9976474852151123
+    },
+    {
+      "variable": "V213",
+      "retenida": "V179",
+      "rho_spearman_abs": 0.9978985030209165
+    },
+    {
+      "variable": "V212",
+      "retenida": "V178",
+      "rho_spearman_abs": 0.9976870575175756
+    },
+    {
+      "variable": "V211",
+      "retenida": "V177",
+      "rho_spearman_abs": 0.9978482355421932
+    },
+    {
+      "variable": "V43",
+      "retenida": "V40",
+      "rho_spearman_abs": 0.9958202217951082
+    },
+    {
+      "variable": "V39",
+      "retenida": "V40",
+      "rho_spearman_abs": 0.9974504898354869
+    },
+    {
+      "variable": "V153",
+      "retenida": "V154",
+      "rho_spearman_abs": 0.9970468409009965
+    },
+    {
+      "variable": "V18",
+      "retenida": "V17",
+      "rho_spearman_abs": 0.9995887474435476
+    },
+    {
+      "variable": "D5",
+      "retenida": "D7",
+      "rho_spearman_abs": 0.9988220376200896
+    },
+    {
+      "variable": "V277",
+      "retenida": "V236",
+      "rho_spearman_abs": 0.9980806035800939
+    },
+    {
+      "variable": "V58",
+      "retenida": "V79",
+      "rho_spearman_abs": 0.9978220028434895
+    },
+    {
+      "variable": "V15",
+      "retenida": "V79",
+      "rho_spearman_abs": 0.998657211116987
+    },
+    {
+      "variable": "V16",
+      "retenida": "V79",
+      "rho_spearman_abs": 0.9987187429149296
+    },
+    {
+      "variable": "V92",
+      "retenida": "V93",
+      "rho_spearman_abs": 0.9997429730140925
+    },
+    {
+      "variable": "V80",
+      "retenida": "V81",
+      "rho_spearman_abs": 0.9990791633847976
+    },
+    {
+      "variable": "C7",
+      "retenida": "V79",
+      "rho_spearman_abs": 0.9978686786263075
+    },
+    {
+      "variable": "V85",
+      "retenida": "V81",
+      "rho_spearman_abs": 0.996315491659063
+    },
+    {
+      "variable": "V57",
+      "retenida": "V79",
+      "rho_spearman_abs": 0.9964388593140767
+    },
+    {
+      "variable": "V237",
+      "retenida": "V278",
+      "rho_spearman_abs": 0.9983782204238648
+    },
+    {
+      "variable": "V22",
+      "retenida": "V17",
+      "rho_spearman_abs": 0.9968037165387593
+    },
+    {
+      "variable": "V21",
+      "retenida": "V17",
+      "rho_spearman_abs": 0.9969963831938786
+    },
+    {
+      "variable": "V32",
+      "retenida": "V93",
+      "rho_spearman_abs": 0.9960757746464658
+    },
+    {
+      "variable": "V31",
+      "retenida": "V93",
+      "rho_spearman_abs": 0.9960197429820813
+    },
+    {
+      "variable": "V71",
+      "retenida": "V72",
+      "rho_spearman_abs": 0.9983372260825917
+    },
+    {
+      "variable": "V64",
+      "retenida": "V60",
+      "rho_spearman_abs": 0.9971796777764784
+    },
+    {
+      "variable": "V59",
+      "retenida": "V60",
+      "rho_spearman_abs": 0.9963403597314008
+    },
+    {
+      "variable": "V235",
+      "retenida": "V276",
+      "rho_spearman_abs": 0.9985725849749953
+    },
+    {
+      "variable": "V304",
+      "retenida": "V303",
+      "rho_spearman_abs": 0.9966332195127532
+    },
+    {
+      "variable": "V134",
+      "retenida": "V103",
+      "rho_spearman_abs": 0.9992380381644993
+    },
+    {
+      "variable": "V142",
+      "retenida": "V163",
+      "rho_spearman_abs": 0.9997393710618498
+    },
+    {
+      "variable": "V161",
+      "retenida": "V141",
+      "rho_spearman_abs": 0.9997474823069236
+    },
+    {
+      "variable": "V133",
+      "retenida": "V102",
+      "rho_spearman_abs": 0.9988985583871224
+    },
+    {
+      "variable": "V317",
+      "retenida": "V294",
+      "rho_spearman_abs": 0.9981281714933923
+    },
+    {
+      "variable": "V132",
+      "retenida": "V101",
+      "rho_spearman_abs": 0.99941889981831
+    },
+    {
+      "variable": "V183",
+      "retenida": "V216",
+      "rho_spearman_abs": 0.9985826131492832
+    },
+    {
+      "variable": "V318",
+      "retenida": "V295",
+      "rho_spearman_abs": 0.9986912163081948
+    },
+    {
+      "variable": "V182",
+      "retenida": "V215",
+      "rho_spearman_abs": 0.9984985702775818
+    },
+    {
+      "variable": "V181",
+      "retenida": "V214",
+      "rho_spearman_abs": 0.9986170659669183
+    },
+    {
+      "variable": "V126",
+      "retenida": "V95",
+      "rho_spearman_abs": 0.9967869292865528
+    },
+    {
+      "variable": "V293",
+      "retenida": "V316",
+      "rho_spearman_abs": 0.9989897189037678
+    },
+    {
+      "variable": "V279",
+      "retenida": "V306",
+      "rho_spearman_abs": 0.995042175093167
+    },
+    {
+      "variable": "V322",
+      "retenida": "V331",
+      "rho_spearman_abs": 0.9955656590915788
+    },
+    {
+      "variable": "D4",
+      "retenida": "D12",
+      "rho_spearman_abs": 1.0
+    }
+  ],
+  "exclusion_ids": [
+    "TransactionID",
+    "TransactionDT"
+  ],
+  "criterio": "relevancia aprendida en 55% inicial + poda Spearman; baja correlación marginal no implica exclusión automática"
+}

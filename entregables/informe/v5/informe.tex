@@ -1,0 +1,56 @@
+\documentclass[9.5pt]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage[letterpaper,margin=1.45cm]{geometry}
+\usepackage{graphicx,booktabs,xcolor,amsmath,hyperref,array,tabularx}\definecolor{navy}{HTML}{102A43}\definecolor{teal}{HTML}{2A9D8F}
+\hypersetup{colorlinks=true,urlcolor=teal}\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\begin{document}\begin{titlepage}\pagecolor{navy}\color{white}\raggedright\vspace*{1cm}{\Large DEEP LEARNING Y SISTEMAS INTELIGENTES\par}\vspace{1cm}{\Huge\bfseries Proyecto 1\\Monitoreo transaccional\par}\vspace{.6cm}{\LARGE Detectar lo que el orden revela · V5 integrada\par}\vfill{\Large Universidad del Valle de Guatemala\\Kevin Recinos · Grupo 1 · Sección 30\\Semestre II 2026\par}\vspace{1cm}{\Large Wilson Alejandro Calderón Argueta · 22018\\Pablo Daniel Barillas Moreno · 22193\par}\vfill\textbf{Decisión:} conservar A para priorizar revisión humana; la evidencia no demuestra valor material del orden.\end{titlepage}\nopagecolor
+
+\section*{Resumen ejecutivo} Se estudiaron 590,540 transacciones IEEE-CIS (3.50% fraude). La investigación compara A, LightGBM sin lectura secuencial; B, GRU causal de 16 eventos; y C, fusión A+B. En evaluación interna, A obtiene AP 0.5445, B 0.4245 y C 0.5425. A minimiza costo (Q1,067,460) y queda como candidato. Permutar B cambia AP de 0.4245 a 0.4355; no se atribuye valor al orden. El benchmark es histórico reutilizado, no test ciego.
+
+\section{Integridad de datos} Las tablas IEEE-CIS se unen por TransactionID y ordenan por TransactionDT; ambos se excluyen como magnitudes. La identidad proxy combina card1, card2, card3, card5 y addr1. Cada secuencia contiene la transacción objetivo y hasta 15 antecedentes; 76.3\% tiene longitud al menos 8 y 66.2\% llega a 16. La división es 70\% entrenamiento, 15\% validación y 15\% benchmark histórico. Imputación, escalado, categorías y umbrales se aprenden antes del bloque evaluado. Toda variable histórica cumple $x_t^{hist}=f(\{x_j:t_j<t\})$.
+
+\begin{figure}[h]\centering\includegraphics[width=.72\linewidth]{../../../evidencia/figuras/v5/01_comparacion_abc_validacion.png}\caption{Comparación común A/B/C en evaluación interna temporal.}\end{figure}
+\newpage
+\section{Núcleo A/B y apuesta C} \textbf{A} reutiliza LightGBM V4 con expertos W/NO-W y agregados causales. \textbf{B} emplea 57 numéricas, 12 categóricas con embeddings, proyección de 96, GRU(64), BCE ponderada, AdamW y early stopping sobre las 413,378 filas de entrenamiento. Ambos producen riesgo continuo sobre las mismas filas. \textbf{C} combina logits A/B, monto, longitud y producto mediante regresión logística ajustada en un bloque separado.
+
+\textbf{Hipótesis previa:} fusionar A+B será útil si aumenta AP al menos 0.01 y reduce costo al menos 5\% frente al mejor modelo individual. C obtiene cambio AP -0.0020 y reducción de costo -0.43\%; el veredicto es \textbf{no útil}.
+
+\begin{center}\begin{tabular}{lrrrrrr}\toprule Modelo&AP&ROC&Prec.&Recall&F1&Costo\\\midrule
+A&0.545&0.908&0.220&0.738&0.339&Q1,067,460\\
+B&0.424&0.877&0.132&0.749&0.224&Q1,320,840\\
+C&0.542&0.911&0.173&0.785&0.284&Q1,072,020\\\bottomrule\end{tabular}\end{center}
+\newpage
+\section{Valor del orden} La permutación baraja solo los antecedentes, conserva eventos, variables agregadas y transacción objetivo, y se repite cinco veces. B original obtiene AP 0.4245; permutada, 0.4355$\pm$0.0021. La diferencia original--permutada es -0.0111. Recortar a 3 eventos produce 0.4253; usar 8 produce 0.4225. Destruir o reducir la historia no ocasiona una caída material: no puede afirmarse que el orden aporte.
+
+\begin{figure}[h]\centering\includegraphics[width=.78\linewidth]{../../../evidencia/figuras/v5/03_falsificaciones_orden_v5.png}\caption{Permutación controlada y segunda prueba de falsificación.}\end{figure}
+
+La caída de B entre evaluación interna y benchmark (AP 0.424 a 0.218) revela sensibilidad temporal. Una secuencia más rica no garantiza estabilidad si la identidad es aproximada.
+\newpage
+\section{Umbral y valor económico} La política predefinida minimiza $4200FN+180FP$ sujeto a recall $\ge0.75$ en el bloque de umbral. A usa $\tau=0.05783$. En benchmark histórico logra AP 0.5592, precisión 0.2215, recall 0.7327, F1 0.3402 y costo Q4,890,000.
+
+\begin{center}\begin{tabular}{lrrr}\toprule Modelo&Costo 12 tx/tarjeta/mes&Ahorro vs. A&Alertas/100k\\\midrule
+A&Q927,422,359&Q0&11,514\\
+B&Q1,092,992,854&Q-165,570,495&21,934\\
+C&Q943,103,194&Q-15,680,834&17,197\\\bottomrule\end{tabular}\end{center}
+
+La proyección usa 1.4 millones de tarjetas y escenarios 5/12/20 transacciones por tarjeta; no es una cifra contable. Ahorros negativos representan pérdidas frente a A.
+
+\begin{figure}[h]\centering\includegraphics[width=.66\linewidth]{../../../evidencia/figuras/v5/04_costos_abc_v5.png}\caption{Costo de los tres modelos en evaluación interna.}\end{figure}
+\newpage
+\section{Recomendación, errores y límites} Se recomienda \textbf{conservar y complementar} el sistema tabular con A para ordenar revisión humana. No se recomienda migrar a B ni bloquear automáticamente. Los falsos negativos de monto alto son el error prioritario; se exportan cien casos para análisis. La recomendación cambiaría si una identidad fiable causara una caída material al permutar, una cohorte nueva favoreciera B/C o la operación no absorbiera las alertas.
+
+Límites: benchmark reutilizado, identidad proxy, anonimización, 182 días, costos académicos, deriva y ausencia de privacidad, equidad, seguridad, explicaciones, latencia y apelación. Antes de producción se requiere cohorte temporal nueva y piloto humano.
+
+\section*{Tres decisiones defendibles} (1) LightGBM V4 reemplaza HGB V1 por cobertura y costo; (2) GRU se prefiere a Transformer/TCN por eficiencia y falsabilidad; (3) stacking tardío reemplaza el híbrido interno para aislar aportes. Ninguna decisión usa accuracy ni partición aleatoria.
+
+\section*{Referencias}\small Cho, K., et al. (2014). GRU encoder--decoder. \textit{EMNLP}, 1724--1734.\\IEEE CIS. (2019). \textit{IEEE-CIS Fraud Detection}. Kaggle.\\Ke, G., et al. (2017). LightGBM. \textit{NeurIPS, 30}.\\Saito, T., \& Rehmsmeier, M. (2015). Precision--recall plots for imbalanced data. \textit{PLOS ONE, 10}(3).
+\newpage
+\section*{Matriz de evidencias}\small
+\begin{tabularx}{\linewidth}{p{2.5cm}p{2.7cm}X X}\toprule Evidencia&Ubicación&Conclusión&Limitación\\\midrule
+Integridad&Sección 1, Fig. 1&70/15/15 temporal y train-only&Identidad aproximada\\
+Comparación A/B&Tabla A/B/C&A domina AP, F1 y costo&A posee más ingeniería\\
+Valor del orden&Fig. 2&Permutar no reduce AP&Una GRU y una clave\\
+Apuesta C&Sección 2&No alcanza criterio previo&Fusión logística específica\\
+Decisión económica&Sección 4, Fig. 3&A minimiza costo interno&Costos y volumen académicos\\
+Recomendación&Sección 5&Complementar con revisión&Requiere cohorte nueva\\\bottomrule\end{tabularx}
+
+\vfill\textbf{Declaración de IA.} Se usó asistencia para código, redacción, visualización y auditoría. Los autores ejecutaron y verificaron datos, métricas, falsificaciones y conclusiones.\end{document}

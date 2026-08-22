@@ -1,3 +1,5 @@
 raw/*.csv
 raw/kagglehub_cache/
-processed/
+
+# Los productos procesados pequeños se conservan por versión para trazabilidad.
+# Los datos crudos y la caché de Kaggle siguen excluidos.

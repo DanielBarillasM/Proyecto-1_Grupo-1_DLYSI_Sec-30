@@ -21,7 +21,7 @@ Las versiones están fijadas a las comprobadas en Windows 10, Python 3.13.1 y CP
 Primero acepte las reglas de la competencia `ieee-fraud-detection` en Kaggle. Configure su token fuera del repositorio y ejecute:
 
 ```powershell
-python codigo/download_data.py
+python codigo/compartido/download_data.py
 ```
 
 Se esperan:
@@ -36,7 +36,7 @@ Los CSV, `kaggle.json` y cualquier token están ignorados por Git y nunca deben 
 ## 3. Ejecutar V5
 
 ```powershell
-python -u codigo/proyecto1_v5_pipeline.py
+python -u codigo/v5/proyecto1_v5_pipeline.py
 ```
 
 El pipeline:
@@ -55,15 +55,15 @@ En CPU, la primera ejecución tarda aproximadamente 12–20 minutos. Si existe `
 
 ```powershell
 $env:V5_FORCE_RETRAIN='1'
-python -u codigo/proyecto1_v5_pipeline.py
+python -u codigo/v5/proyecto1_v5_pipeline.py
 Remove-Item Env:V5_FORCE_RETRAIN
 ```
 
 ## 4. Regenerar documentación
 
 ```powershell
-python codigo/build_v5_deliverables.py
-jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=300 entregables/cuaderno/proyecto1_calderon_barillas.ipynb
+python codigo/v5/build_v5_deliverables.py
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=300 entregables/cuaderno/v5/proyecto1_calderon_barillas.ipynb
 ```
 
 Para recompilar `informe.pdf` se requiere una distribución LaTeX con `pdflatex`. Para convertir la presentación se utiliza Microsoft Edge en modo headless.
@@ -71,7 +71,7 @@ Para recompilar `informe.pdf` se requiere una distribución LaTeX con `pdflatex`
 ## 5. Auditar
 
 ```powershell
-python codigo/audit_project1_v5.py
+python codigo/v5/audit_project1_v5.py
 ```
 
 La auditoría verifica A/B/C, falsificaciones, hipótesis previa, economía, artefactos, notebook ejecutado, siete páginas máximas, ocho diapositivas, README rubricado, rutas y ausencia de secretos.

@@ -1,0 +1,329 @@
+"""Construye la presentación HTML ampliada de Proyecto 1 V5.
+
+La presentación conserva las ocho diapositivas solicitadas por la rúbrica, pero
+añade diagramas, notas del expositor, vista general, navegación accesible y una
+versión imprimible en formato 16:9.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _f(value: float, digits: int = 3) -> str:
+    return f"{value:.{digits}f}"
+
+
+def _pct(value: float, digits: int = 1) -> str:
+    return f"{100 * value:.{digits}f}%"
+
+
+def _money(value: float) -> str:
+    return f"Q{value:,.0f}"
+
+
+def build_presentation(
+    root: Path = ROOT,
+    results: dict[str, Any] | None = None,
+    export_pdf: bool = True,
+) -> Path:
+    """Escribe la presentación V5 y, si Edge está disponible, actualiza el PDF."""
+
+    root = root.resolve()
+    if results is None:
+        results = json.loads(
+            (root / "artefactos" / "v5" / "resultados_v5.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+    internal = results["evaluacion_interna"]
+    benchmark = results["benchmark_historico"]
+    falsification = results["falsificaciones"]
+    hypothesis = results["hipotesis_C"]
+
+    a = internal["A_V4"]
+    b = internal["B_GRU"]
+    c = internal["C_fusion"]
+    a_benchmark = benchmark["A_V4"]
+
+    replacements = {
+        "__A_AP__": _f(a["auc_pr"]),
+        "__B_AP__": _f(b["auc_pr"]),
+        "__C_AP__": _f(c["auc_pr"]),
+        "__A_ROC__": _f(a["roc_auc"]),
+        "__B_ROC__": _f(b["roc_auc"]),
+        "__C_ROC__": _f(c["roc_auc"]),
+        "__A_PRECISION__": _pct(a["precision"]),
+        "__B_PRECISION__": _pct(b["precision"]),
+        "__C_PRECISION__": _pct(c["precision"]),
+        "__A_RECALL__": _pct(a["recall"]),
+        "__B_RECALL__": _pct(b["recall"]),
+        "__C_RECALL__": _pct(c["recall"]),
+        "__A_F1__": _f(a["f1"]),
+        "__B_F1__": _f(b["f1"]),
+        "__C_F1__": _f(c["f1"]),
+        "__A_COST__": _money(a["cost_q"]),
+        "__B_COST__": _money(b["cost_q"]),
+        "__C_COST__": _money(c["cost_q"]),
+        "__A_BENCH_AP__": _f(a_benchmark["auc_pr"]),
+        "__A_BENCH_COST__": _money(a_benchmark["cost_q"]),
+        "__A_THRESHOLD__": _f(results["umbrales"]["A_V4"], 4),
+        "__B_THRESHOLD__": _f(results["umbrales"]["B_GRU"], 4),
+        "__C_THRESHOLD__": _f(results["umbrales"]["C_fusion"], 4),
+        "__A_ALERTS__": f'{a["alertas_por_100k"]:,.0f}',
+        "__B_ALERTS__": f'{b["alertas_por_100k"]:,.0f}',
+        "__C_ALERTS__": f'{c["alertas_por_100k"]:,.0f}',
+        "__PERMUTED_AP__": _f(falsification["permutation_mean_auc_pr"], 4),
+        "__PERMUTED_STD__": _f(falsification["permutation_std_auc_pr"], 4),
+        "__ORDER_DROP__": _f(falsification["order_auc_pr_drop"], 4),
+        "__H3_AP__": _f(falsification["historia_3"]["auc_pr"], 4),
+        "__H8_AP__": _f(falsification["historia_8"]["auc_pr"], 4),
+        "__C_AP_GAIN__": _f(hypothesis["auc_pr_gain"], 4),
+        "__C_COST_REDUCTION__": _pct(hypothesis["cost_reduction"], 2),
+    }
+
+    page = r'''<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proyecto 1 · Monitoreo transaccional · V5</title>
+  <style>
+    :root{--navy:#081a2a;--navy2:#102a43;--blue:#184e77;--sky:#8ecae6;--teal:#2a9d8f;--mint:#65d3c3;--gold:#f4b942;--red:#ff7b72;--paper:#eef7ff;--muted:#a9bdca;--line:#ffffff24;--glass:#ffffff0d}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--navy);color:var(--paper);font-family:Inter,"Segoe UI",Arial,sans-serif;overflow:hidden}.slide{display:none;width:100vw;height:100vh;padding:4.6vh 5.8vw 5.8vh;position:relative;background:radial-gradient(circle at 91% 8%,#2a9d8f40,transparent 27%),radial-gradient(circle at 4% 94%,#184e774d,transparent 30%),linear-gradient(132deg,#081a2a,#102a43 58%,#0c2436)}.slide.active{display:block}.slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 78%);pointer-events:none}.topline{display:flex;align-items:center;justify-content:space-between;gap:1rem;position:relative;z-index:1}.eyebrow{color:var(--mint);font-size:clamp(11px,1.05vw,18px);font-weight:900;letter-spacing:.16em;text-transform:uppercase}.chips{display:flex;gap:.5vw;flex-wrap:wrap;justify-content:flex-end}.chip{padding:.38vw .72vw;border:1px solid #ffffff2e;border-radius:999px;background:#ffffff0c;color:#cfe3ef;font-size:clamp(9px,.72vw,13px);font-weight:750}.chip.hot{border-color:#65d3c377;color:var(--mint);background:#2a9d8f18}h1{max-width:1120px;margin:1.35vh 0 2.3vh;font-size:clamp(29px,3.55vw,62px);line-height:1.04;letter-spacing:-.035em;position:relative;z-index:1}h2,h3,p{margin-top:0}.subtitle{max-width:950px;color:#c7d9e5;font-size:clamp(14px,1.3vw,23px);line-height:1.42}.content{height:72vh;position:relative;z-index:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.05vw}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.85vw}.card{padding:1.05vw 1.15vw;border:1px solid var(--line);border-radius:1vw;background:var(--glass);box-shadow:0 10px 30px #00000018}.card.teal{border-color:#65d3c36e;background:linear-gradient(145deg,#2a9d8f25,#ffffff08)}.card.gold{border-color:#f4b94266;background:linear-gradient(145deg,#f4b94218,#ffffff08)}.card.red{border-color:#ff7b7255}.label{display:block;margin-bottom:.38vw;color:var(--muted);font-size:clamp(9px,.7vw,13px);font-weight:850;letter-spacing:.1em;text-transform:uppercase}.metric{font-size:clamp(24px,2.45vw,44px);font-weight:920;line-height:1;color:var(--mint)}.metric.gold{color:var(--gold)}.metric.red{color:var(--red)}.small{font-size:clamp(11px,.92vw,16px);line-height:1.38;color:#c7d9e5}.callout{display:flex;gap:.8vw;align-items:flex-start;margin-top:1vw;padding:.82vw 1vw;border-left:.42vw solid var(--teal);border-radius:.7vw;background:#ffffff10;color:#e8f4fa;font-size:clamp(12px,1vw,18px);line-height:1.38}.callout.warn{border-left-color:var(--gold)}.verdict{display:inline-flex;align-items:center;gap:.5vw;padding:.55vw .85vw;border:1px solid #65d3c36e;border-radius:999px;background:#2a9d8f20;color:var(--mint);font-weight:900;font-size:clamp(11px,.9vw,16px)}.dot{width:.55vw;height:.55vw;min-width:7px;min-height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 14px currentColor}.scoreboard{display:grid;grid-template-columns:1.08fr .92fr;gap:1.35vw;align-items:stretch}.decision{padding:1.5vw;border:1px solid #65d3c35e;border-radius:1.2vw;background:linear-gradient(145deg,#2a9d8f2d,#184e7719);display:flex;flex-direction:column;justify-content:space-between}.decision .hero-metric{font-size:clamp(52px,7vw,118px);font-weight:950;line-height:.82;color:var(--mint);letter-spacing:-.06em}.decision h2{font-size:clamp(20px,2vw,36px);margin:.6vw 0}.evidence-chain{display:flex;align-items:center;gap:.55vw;flex-wrap:wrap}.evidence-chain span{padding:.55vw .72vw;border-radius:.65vw;background:#ffffff0c;border:1px solid var(--line);font-size:clamp(10px,.78vw,14px);font-weight:750}.arrow{color:var(--mint);font-weight:950}.timeline{display:grid;grid-template-columns:1.05fr .22fr 1.15fr .22fr 1fr .22fr 1.25fr;align-items:center;gap:.42vw;margin-top:1vw}.stage{min-height:13vh;padding:1vw;border:1px solid var(--line);border-radius:.9vw;background:#ffffff0b}.stage b{display:block;color:var(--mint);font-size:clamp(16px,1.55vw,28px);margin-bottom:.4vw}.stage p{font-size:clamp(10px,.82vw,15px);line-height:1.35;color:#c8dae5}.flow-arrow{text-align:center;color:var(--mint);font-size:2vw;font-weight:950}.splitbar{display:grid;grid-template-columns:70fr 15fr 15fr;height:2.2vw;min-height:24px;margin:1vw 0 .4vw;border-radius:999px;overflow:hidden;border:1px solid #ffffff33}.splitbar span{display:flex;align-items:center;justify-content:center;font-size:clamp(8px,.68vw,12px);font-weight:850}.train{background:#2a9d8f}.validation{background:#2878a5}.benchmark{background:#d19b32}.models{display:grid;grid-template-columns:1fr .22fr 1fr .22fr 1fr;gap:.55vw;align-items:stretch}.model{padding:1.1vw;border:1px solid var(--line);border-radius:1vw;background:#ffffff0b;position:relative}.model.a{border-top:.42vw solid var(--mint)}.model.b{border-top:.42vw solid var(--sky)}.model.c{border-top:.42vw solid var(--gold)}.model h2{font-size:clamp(18px,1.7vw,30px);margin:.4vw 0}.model .model-tag{font-size:clamp(28px,3vw,52px);font-weight:950;line-height:1}.model.a .model-tag{color:var(--mint)}.model.b .model-tag{color:var(--sky)}.model.c .model-tag{color:var(--gold)}.mini-flow{display:flex;flex-wrap:wrap;gap:.4vw;margin:.7vw 0}.mini-flow span{padding:.38vw .5vw;border-radius:.45vw;background:#ffffff0d;border:1px solid #ffffff1f;font-size:clamp(8px,.66vw,12px)}.common-core{margin-top:1vw;padding:.72vw 1vw;border:1px dashed #65d3c360;border-radius:.8vw;text-align:center;color:#dcebf3;font-size:clamp(11px,.88vw,16px)}.chart-panel{display:grid;grid-template-columns:1.42fr .88fr;gap:1.15vw;align-items:stretch}.figure{display:flex;align-items:center;justify-content:center;padding:.65vw;border-radius:1vw;background:#f7fbfd;min-height:40vh;box-shadow:0 16px 35px #00000025}.figure img{display:block;max-width:100%;max-height:48vh;object-fit:contain}.metric-table{width:100%;border-collapse:separate;border-spacing:0 .42vw;font-size:clamp(9px,.78vw,14px)}.metric-table th{padding:.5vw;color:var(--muted);text-align:right;font-size:.72vw;text-transform:uppercase;letter-spacing:.07em}.metric-table th:first-child,.metric-table td:first-child{text-align:left}.metric-table td{padding:.58vw .5vw;background:#ffffff0c;text-align:right}.metric-table tr td:first-child{border-radius:.55vw 0 0 .55vw;font-weight:900}.metric-table tr td:last-child{border-radius:0 .55vw .55vw 0}.metric-table tr.winner td{background:#2a9d8f22;color:#f2fffc}.test-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:1.15vw}.expect{display:grid;grid-template-columns:1fr .18fr 1fr;gap:.6vw;align-items:center}.expect .side{padding:1vw;border-radius:.9vw;border:1px solid var(--line);background:#ffffff0b;min-height:12vh}.expect .side b{display:block;margin-bottom:.45vw;font-size:clamp(15px,1.25vw,23px)}.comparison{display:grid;grid-template-columns:repeat(3,1fr);gap:.6vw;margin-top:.8vw}.comparison .card{padding:.72vw}.formula{padding:.72vw;border-radius:.75vw;background:#061521;border:1px solid #ffffff20;text-align:center;font-size:clamp(17px,1.55vw,28px);color:var(--mint);font-family:"Cambria Math",Georgia,serif}.cost-ratio{display:flex;align-items:center;justify-content:center;min-height:11vh;border-radius:1vw;background:linear-gradient(145deg,#f4b94225,#ff7b7217);border:1px solid #f4b94255;text-align:center}.cost-ratio b{font-size:clamp(38px,4.5vw,78px);color:var(--gold);line-height:1}.bars{display:grid;gap:.5vw;margin-top:.75vw}.bar-row{display:grid;grid-template-columns:1.3fr 3.7fr .9fr;gap:.55vw;align-items:center;font-size:clamp(9px,.72vw,13px)}.bar-track{height:.7vw;min-height:8px;background:#ffffff12;border-radius:999px;overflow:hidden}.bar-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--teal),var(--mint))}.bar-fill.b{background:linear-gradient(90deg,#397da2,var(--sky))}.bar-fill.c{background:linear-gradient(90deg,#c78f25,var(--gold))}.operations{display:grid;grid-template-columns:1fr 1.12fr;gap:1.15vw}.segment-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65vw}.segment{padding:.8vw;border:1px solid var(--line);border-radius:.8vw;background:#ffffff0b}.segment strong{display:block;color:var(--mint);font-size:clamp(17px,1.55vw,28px)}.guardrails{display:grid;gap:.55vw}.guardrail{display:grid;grid-template-columns:auto 1fr;gap:.65vw;padding:.68vw .78vw;border:1px solid var(--line);border-radius:.7vw;background:#ffffff09}.icon{display:flex;align-items:center;justify-content:center;width:2vw;height:2vw;min-width:25px;min-height:25px;border-radius:.55vw;background:#2a9d8f27;color:var(--mint);font-weight:950}.roadmap{display:grid;grid-template-columns:1.2fr .8fr;gap:1.25vw}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:.5vw;align-items:stretch}.step{padding:.78vw .6vw;border:1px solid var(--line);border-radius:.75vw;background:#ffffff0b;text-align:center}.step .n{display:flex;align-items:center;justify-content:center;width:2.1vw;height:2.1vw;min-width:25px;min-height:25px;margin:0 auto .5vw;border-radius:50%;background:var(--teal);font-weight:950}.step b{display:block;font-size:clamp(10px,.8vw,15px)}.final-box{display:grid;grid-template-columns:1fr auto;gap:1vw;align-items:center;padding:1.15vw;border:1px solid #65d3c366;border-radius:1vw;background:linear-gradient(145deg,#2a9d8f28,#184e771b)}.qr{width:7.2vw;height:7.2vw;min-width:72px;min-height:72px;padding:.32vw;background:white;border-radius:.7vw}.notes{display:none;position:absolute;right:4vw;bottom:7vh;width:min(41vw,650px);max-height:48vh;overflow:auto;padding:1.1vw 1.25vw;border-radius:.9vw;background:#f7fbfd;color:#172033;box-shadow:0 20px 60px #0008;z-index:20}.notes h3{margin:0 0 .55vw;color:#184e77}.notes p,.notes li{font-size:clamp(11px,.85vw,15px);line-height:1.42}.show-notes .slide.active .notes{display:block}.notes::before{content:"NOTAS DEL EXPOSITOR";display:inline-block;margin-bottom:.55vw;padding:.28vw .5vw;border-radius:999px;background:#dceef8;color:#184e77;font-size:10px;font-weight:900;letter-spacing:.08em}.footer{position:absolute;left:5.8vw;right:12vw;bottom:2.2vh;display:flex;justify-content:space-between;align-items:center;color:#9eb6c8;font-size:clamp(9px,.72vw,13px);z-index:2}.footer b{color:var(--mint)}.progress{position:fixed;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--teal),var(--mint));transition:width .25s;z-index:30}.controls{position:fixed;right:1.4vw;bottom:1.2vh;display:flex;gap:.4vw;z-index:35}.controls button{width:2.1vw;height:2.1vw;min-width:28px;min-height:28px;border:1px solid #ffffff30;border-radius:.6vw;background:#061521cc;color:#dcecf4;font-weight:900;cursor:pointer}.controls button:hover{border-color:var(--mint);color:var(--mint)}.help{position:fixed;left:50%;bottom:1.35vh;transform:translateX(-50%);z-index:35;color:#7895a8;font-size:clamp(8px,.62vw,11px)}body.overview{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;padding:18px;overflow:auto}body.overview .slide{display:block;width:calc(50vw - 27px);height:calc((50vw - 27px)*.5625);padding:2.2vw 2.7vw;border:1px solid #ffffff25;border-radius:14px;overflow:hidden;cursor:pointer}body.overview .slide.active{outline:3px solid var(--mint)}body.overview h1{font-size:1.8vw}body.overview .content{height:72%}body.overview .notes,body.overview .footer,body.overview .controls,body.overview .help{display:none}body.overview .metric{font-size:1.5vw}body.overview .figure{min-height:18vh}body.overview .figure img{max-height:20vh}
+    @page{size:13.333in 7.5in;margin:0}@media print{html,body{width:13.333in;height:auto;overflow:visible;background:white}body{display:block!important;padding:0!important}.slide{display:block!important;width:13.333in;height:7.5in;page-break-after:always;padding:.38in .65in}.notes,.controls,.progress,.help{display:none!important}.figure{min-height:0}.figure img{max-height:3.5in}.footer{bottom:.22in;left:.65in;right:.65in}}
+  </style>
+</head>
+<body>
+  <section class="slide" data-title="Decisión ejecutiva">
+    <div class="topline"><div class="eyebrow">01 · Decisión ejecutiva</div><div class="chips"><span class="chip hot">V5 OFICIAL</span><span class="chip">IEEE-CIS</span><span class="chip">A/B/C</span></div></div>
+    <h1>Conservar A: la secuencia aún no demuestra valor adicional</h1>
+    <div class="content scoreboard">
+      <div class="decision">
+        <div><span class="label">AUC-PR interna del candidato A</span><div class="hero-metric">__A_AP__</div><h2>LightGBM con expertos por producto</h2><p class="subtitle">La opción tabular ofrece el mejor equilibrio entre ranking, F1, costo y carga de alertas.</p></div>
+        <div class="evidence-chain"><span>Datos causales</span><b class="arrow">→</b><span>Comparación común</span><b class="arrow">→</b><span>Falsificación</span><b class="arrow">→</b><span>Decisión económica</span></div>
+      </div>
+      <div class="grid2">
+        <div class="card teal"><span class="label">Costo interno A</span><div class="metric">__A_COST__</div><p class="small">Menor costo entre A, B y C con la política seleccionada.</p></div>
+        <div class="card"><span class="label">Recall A</span><div class="metric">__A_RECALL__</div><p class="small">Recuperación alta sin elevar la carga al nivel de B.</p></div>
+        <div class="card red"><span class="label">Efecto del orden</span><div class="metric red">__ORDER_DROP__</div><p class="small">ΔAP original−permutada: el signo observado contradice la mejora esperada.</p></div>
+        <div class="card gold"><span class="label">Decisión de uso</span><div class="metric gold" style="font-size:2vw">REVISIÓN</div><p class="small">Priorizar casos; nunca bloquear ni atribuir fraude automáticamente.</p></div>
+      </div>
+    </div>
+    <div class="footer"><span>Wilson Calderón · Pablo Barillas · Grupo 1</span><span><b>1 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Mensaje principal</h3><p>Abra con la decisión, no con la arquitectura. Aclare que A es el modelo tabular V4 recalibrado dentro del protocolo V5. La conclusión no es que las GRU sean inútiles, sino que esta representación de identidad y este conjunto de variables no demostraron valor temporal adicional.</p><p><b>Transición:</b> para justificar la decisión, primero hay que explicar cómo se evitó entrenar con el futuro.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Datos y protocolo">
+    <div class="topline"><div class="eyebrow">02 · Datos y protocolo temporal</div><div class="chips"><span class="chip">590,540 EVENTOS</span><span class="chip">20,663 FRAUDES</span><span class="chip hot">3.50% PREVALENCIA</span></div></div>
+    <h1>El futuro queda fuera de cada decisión</h1>
+    <div class="content">
+      <div class="timeline">
+        <div class="stage"><span class="label">Fuente</span><b>IEEE-CIS</b><p>Transacciones + identidad unidas exclusivamente por <code>TransactionID</code>.</p></div><div class="flow-arrow">→</div>
+        <div class="stage"><span class="label">Orden</span><b>TransactionDT</b><p>Orden cronológico global; el identificador y el tiempo no se usan como magnitudes predictivas.</p></div><div class="flow-arrow">→</div>
+        <div class="stage"><span class="label">Historia</span><b>≤ 16 eventos</b><p>Clave proxy: tarjeta + dirección. Solo antecedentes previos al evento objetivo.</p></div><div class="flow-arrow">→</div>
+        <div class="stage"><span class="label">Transformación</span><b>Train-only</b><p>Imputación, escalado y vocabularios se aprenden sin observar validación ni benchmark.</p></div>
+      </div>
+      <div class="splitbar"><span class="train">70% · entrenamiento</span><span class="validation">15% · validación</span><span class="benchmark">15% · benchmark</span></div>
+      <div class="grid3">
+        <div class="card"><span class="label">Dentro de validación</span><p class="small"><b>Early stopping → ajuste de C → calibración → umbral → evaluación interna.</b> Cada decisión usa un bloque anterior al bloque evaluado.</p></div>
+        <div class="card teal"><span class="label">Garantía causal</span><p class="small">Para la transacción <i>t</i>, las estadísticas históricas se calculan únicamente con eventos <i>j</i> tales que <i>t<sub>j</sub> &lt; t</i>.</p></div>
+        <div class="card gold"><span class="label">Advertencia</span><p class="small">El 15% final ya fue observado en iteraciones anteriores. Se reporta como <b>benchmark histórico reutilizado</b>, no como prueba ciega.</p></div>
+      </div>
+    </div>
+    <div class="footer"><span>Integridad temporal · Sin particiones aleatorias</span><span><b>2 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Qué defender</h3><p>Explique por qué una división aleatoria sería optimista en fraude: mezclaría patrones posteriores con entrenamiento. Destaque que la validación no es un único bloque usado para todo, sino una secuencia de bloques para early stopping, stacking, calibración y evaluación.</p><p><b>Limitación:</b> la identidad es aproximada y puede mezclar clientes o fragmentar una misma persona.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Diseño A/B/C">
+    <div class="topline"><div class="eyebrow">03 · Diseño experimental</div><div class="chips"><span class="chip hot">MISMAS FILAS</span><span class="chip">MISMO HORIZONTE</span><span class="chip">MISMO COSTO</span></div></div>
+    <h1>Tres modelos responden a la misma pregunta</h1>
+    <div class="content">
+      <div class="models">
+        <div class="model a"><span class="label">Sin leer el orden</span><div class="model-tag">A</div><h2>LightGBM experto</h2><div class="mini-flow"><span>variables actuales</span><span>agregados causales</span><span>ProductCD W / NO-W</span></div><p class="small">Baseline competitivo que representa nivel, frecuencia, recencia y contexto sin consumir una secuencia ordenada.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="model b"><span class="label">Lee antecedentes</span><div class="model-tag">B</div><h2>Embeddings + GRU(64)</h2><div class="mini-flow"><span>57 numéricas</span><span>12 categorías</span><span>hasta 16 eventos</span></div><p class="small">BCE ponderada, AdamW, clipping y early stopping. Produce un puntaje secuencial continuo.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="model c"><span class="label">Apuesta de complementariedad</span><div class="model-tag">C</div><h2>Stacking logístico</h2><div class="mini-flow"><span>score A</span><span>score B</span><span>monto</span><span>historia</span><span>producto</span></div><p class="small">Fusión tardía entrenada en un bloque independiente para evitar que C observe su propia evaluación.</p></div>
+      </div>
+      <div class="common-core"><b>Núcleo comparable:</b> mismo objetivo <i>isFraud</i>, población, partición temporal, costos Q4,200/Q180 y evaluación AUC-PR. C debía ganar <b>≥ 0.01 AP</b> y reducir costo <b>≥ 5%</b>.</div>
+    </div>
+    <div class="footer"><span>A = tabular · B = secuencial · C = fusión</span><span><b>3 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Cómo explicar A/B/C</h3><p>A responde qué logra una representación tabular fuerte. B pregunta si el orden de los antecedentes añade algo. C prueba si ambas señales son complementarias. El criterio de C se escribió antes de ver su bloque de evaluación para impedir reinterpretar una diferencia mínima como éxito.</p><p><b>Transición:</b> con ese marco común, ya se pueden comparar resultados sin atribuir diferencias al protocolo.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Resultados comparables">
+    <div class="topline"><div class="eyebrow">04 · Resultados comparables</div><div class="chips"><span class="chip hot">GANADOR: A</span><span class="chip">EVALUACIÓN INTERNA</span></div></div>
+    <h1>A domina el balance; C no cumple su apuesta</h1>
+    <div class="content chart-panel">
+      <div class="figure"><img src="../../../evidencia/figuras/v5/01_comparacion_abc_validacion.png" alt="Comparación AUC-PR interna de A, B y C"></div>
+      <div>
+        <table class="metric-table"><thead><tr><th>Modelo</th><th>AP</th><th>Recall</th><th>F1</th><th>Costo</th></tr></thead><tbody>
+          <tr class="winner"><td>A · LightGBM</td><td>__A_AP__</td><td>__A_RECALL__</td><td>__A_F1__</td><td>__A_COST__</td></tr>
+          <tr><td>B · GRU</td><td>__B_AP__</td><td>__B_RECALL__</td><td>__B_F1__</td><td>__B_COST__</td></tr>
+          <tr><td>C · Fusión</td><td>__C_AP__</td><td>__C_RECALL__</td><td>__C_F1__</td><td>__C_COST__</td></tr>
+        </tbody></table>
+        <div class="grid2">
+          <div class="card red"><span class="label">Ganancia AP de C</span><div class="metric red" style="font-size:2vw">__C_AP_GAIN__</div><p class="small">Por debajo del +0.01 predefinido.</p></div>
+          <div class="card gold"><span class="label">Reducción de costo C</span><div class="metric gold" style="font-size:2vw">__C_COST_REDUCTION__</div><p class="small">No alcanza el 5% requerido.</p></div>
+        </div>
+        <div class="callout"><span class="dot"></span><div><b>Veredicto:</b> C no es útil bajo el criterio previo. En el benchmark histórico, A obtiene AP __A_BENCH_AP__ y costo __A_BENCH_COST__.</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>AUC-PR prioritaria por desbalance</span><span><b>4 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Lectura correcta de la tabla</h3><p>B y C elevan ligeramente el recall, pero generan muchas más alertas y falsos positivos. A posee el mejor AP y F1 y el menor costo interno. No confunda AUC-PR con precisión en un umbral: AP evalúa el ranking completo; precisión, recall, F1 y costo dependen del umbral operativo.</p><p>El benchmark se presenta solo como referencia histórica; la decisión V5 se fijó en la evaluación interna.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Falsificación del orden">
+    <div class="topline"><div class="eyebrow">05 · Falsificación</div><div class="chips"><span class="chip">5 SEMILLAS</span><span class="chip">HISTORIA 3 / 8 / 16</span><span class="chip hot">ORDEN NO DEMOSTRADO</span></div></div>
+    <h1>Si el orden importara, destruirlo debería perjudicar a B</h1>
+    <div class="content test-grid">
+      <div class="figure"><img src="../../../evidencia/figuras/v5/03_falsificaciones_orden_v5.png" alt="Resultados de permutación y recorte de historia"></div>
+      <div>
+        <div class="expect"><div class="side"><span class="label">Esperábamos</span><b>AP permutada ↓</b><p class="small">Los mismos antecedentes en orden incorrecto deberían degradar el ranking.</p></div><div class="flow-arrow">≠</div><div class="side"><span class="label">Observamos</span><b>AP permutada __PERMUTED_AP__</b><p class="small">Media de cinco semillas, desviación __PERMUTED_STD__.</p></div></div>
+        <div class="comparison">
+          <div class="card"><span class="label">Original · 16</span><div class="metric" style="font-size:2vw">__B_AP__</div></div>
+          <div class="card"><span class="label">Historia · 8</span><div class="metric" style="font-size:2vw">__H8_AP__</div></div>
+          <div class="card"><span class="label">Historia · 3</span><div class="metric" style="font-size:2vw">__H3_AP__</div></div>
+        </div>
+        <div class="callout warn"><span class="dot" style="color:var(--gold)"></span><div><b>ΔAP original−permutada = __ORDER_DROP__.</b> La red puede aprovechar la colección de eventos o variables actuales, pero esta prueba no respalda una contribución material de su orden.</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>Una prueba negativa también es evidencia</span><span><b>5 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>La diapositiva clave</h3><p>La permutación conserva exactamente los eventos y deja la transacción objetivo al final; solamente destruye el orden de los antecedentes. Si la GRU hubiera aprendido dependencia temporal útil, su AP debería caer. En lugar de caer, sube en promedio.</p><p>No diga que “el orden empeora el fraude” ni que toda secuencia es inútil. Diga que, con esta clave proxy, variables y arquitectura, no se demostró valor adicional del orden.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Economía y umbral">
+    <div class="topline"><div class="eyebrow">06 · Economía y operación</div><div class="chips"><span class="chip hot">FN = Q4,200</span><span class="chip">FP = Q180</span><span class="chip">RECALL ≥ 0.75 EN SELECCIÓN</span></div></div>
+    <h1>El umbral convierte puntajes en una política de revisión</h1>
+    <div class="content chart-panel">
+      <div class="figure"><img src="../../../evidencia/figuras/v5/04_costos_abc_v5.png" alt="Costo económico de A, B y C"></div>
+      <div>
+        <div class="grid2"><div class="formula">C(τ) = 4,200·FN + 180·FP</div><div class="cost-ratio"><div><span class="label">Relación de costos</span><b>23.3×</b><p class="small">un FN frente a un FP</p></div></div></div>
+        <div class="grid3" style="margin-top:.7vw"><div class="card teal"><span class="label">Umbral A</span><div class="metric" style="font-size:1.9vw">__A_THRESHOLD__</div></div><div class="card"><span class="label">Umbral B</span><div class="metric" style="font-size:1.9vw">__B_THRESHOLD__</div></div><div class="card gold"><span class="label">Umbral C</span><div class="metric gold" style="font-size:1.9vw">__C_THRESHOLD__</div></div></div>
+        <div class="bars">
+          <div class="bar-row"><b>A · alertas/100k</b><div class="bar-track"><div class="bar-fill" style="width:59%"></div></div><span>__A_ALERTS__</span></div>
+          <div class="bar-row"><b>B · alertas/100k</b><div class="bar-track"><div class="bar-fill b" style="width:100%"></div></div><span>__B_ALERTS__</span></div>
+          <div class="bar-row"><b>C · alertas/100k</b><div class="bar-track"><div class="bar-fill c" style="width:80%"></div></div><span>__C_ALERTS__</span></div>
+        </div>
+        <div class="callout"><span class="dot"></span><div>A reduce la carga respecto de B y C. El umbral no cambia AUC-PR: cambia cuántas alertas se revisan, cuántos fraudes se recuperan y el costo resultante.</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>Escenario académico; no cifra contable</span><span><b>6 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Cómo defender el costo</h3><p>El falso negativo cuesta 23.3 veces más que el falso positivo, por eso se tolera una cantidad importante de alertas. El umbral se seleccionó en un bloque anterior y no en la evaluación interna. Destaque que un costo menor no convierte el modelo en una decisión autónoma: sigue siendo una política para ordenar revisión humana.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Errores y controles">
+    <div class="topline"><div class="eyebrow">07 · Errores, segmentos y controles</div><div class="chips"><span class="chip">DERIVA</span><span class="chip">HISTORIA CORTA</span><span class="chip hot">REVISIÓN HUMANA</span></div></div>
+    <h1>El promedio oculta dónde el modelo es fuerte o frágil</h1>
+    <div class="content operations">
+      <div>
+        <div class="segment-grid">
+          <div class="segment"><span class="label">Producto R</span><strong>AP 0.807</strong><span class="small">Señal relativamente fuerte.</span></div>
+          <div class="segment"><span class="label">Producto W</span><strong style="color:var(--gold)">AP 0.290</strong><span class="small">Mayor población y ranking más difícil.</span></div>
+          <div class="segment"><span class="label">Historia = 1</span><strong>AP 0.696</strong><span class="small">Buen ranking aun con un antecedente.</span></div>
+          <div class="segment"><span class="label">Historia 4–8</span><strong style="color:var(--gold)">AP 0.397</strong><span class="small">Segmento que exige investigación.</span></div>
+        </div>
+        <div class="figure" style="min-height:27vh;margin-top:.7vw"><img src="../../../evidencia/figuras/v5/05_calibracion_v5.png" alt="Curvas de calibración de A, B y C"></div>
+      </div>
+      <div class="guardrails">
+        <div class="guardrail"><div class="icon">1</div><div><b>Priorizar falsos negativos de alto monto</b><p class="small">Revisar patrones por monto, producto, dispositivo y longitud del historial; no limitarse a métricas globales.</p></div></div>
+        <div class="guardrail"><div class="icon">2</div><div><b>Monitorear deriva y calibración</b><p class="small">La estabilidad del ranking y del umbral debe evaluarse por período; un puntaje no permanece calibrado indefinidamente.</p></div></div>
+        <div class="guardrail"><div class="icon">3</div><div><b>Separar alerta de acusación</b><p class="small">El sistema ordena casos para analistas. No demuestra fraude, no bloquea pagos y debe permitir revisión y apelación.</p></div></div>
+        <div class="guardrail"><div class="icon">4</div><div><b>Reconocer identidad aproximada</b><p class="small">La clave tarjeta + dirección puede mezclar o fragmentar entidades; limita cualquier conclusión sobre memoria individual.</p></div></div>
+      </div>
+    </div>
+    <div class="footer"><span>Segmentar antes de generalizar</span><span><b>7 / 8</b> · Proyecto 1</span></div>
+    <aside class="notes"><h3>Qué aporta esta lámina</h3><p>Explique que una cifra promedio puede ocultar productos difíciles. ProductCD=W concentra muchos casos y obtiene AP menor. También hay diferencias por longitud del historial, lo cual refuerza que la entidad secuencial y la representación deben estudiarse antes de aumentar la red.</p><p>Conecte calibración con operación: si el puntaje deja de representar riesgo de forma estable, el umbral económico deja de ser confiable.</p></aside>
+  </section>
+
+  <section class="slide" data-title="Recomendación y ruta">
+    <div class="topline"><div class="eyebrow">08 · Recomendación</div><div class="chips"><span class="chip hot">CONGELAR A</span><span class="chip">NUEVA COHORTE</span><span class="chip">PILOTO HUMANO</span></div></div>
+    <h1>Promover evidencia, no complejidad</h1>
+    <div class="content roadmap">
+      <div>
+        <div class="steps">
+          <div class="step"><div class="n">1</div><b>Congelar A</b><p class="small">Modelo, calibrador, contrato y umbral.</p></div>
+          <div class="step"><div class="n">2</div><b>Nueva cohorte</b><p class="small">Confirmación temporal sin retuning.</p></div>
+          <div class="step"><div class="n">3</div><b>Identidad fiable</b><p class="small">Cliente o cuenta real, con privacidad.</p></div>
+          <div class="step"><div class="n">4</div><b>Costos reales</b><p class="small">Capacidad, latencia y apelaciones.</p></div>
+          <div class="step"><div class="n">5</div><b>Piloto</b><p class="small">Revisión humana y monitoreo.</p></div>
+        </div>
+        <div class="final-box" style="margin-top:1vw"><div><span class="label">Candidato al Proyecto Final</span><h2 style="font-size:2vw;margin:.25vw 0;color:var(--mint)">A · LightGBM V4 + calibración V5</h2><p class="small">Entrada contractual → puntaje continuo → umbral → cola priorizada → analista. Si una nueva cohorte contradice la evidencia, se reabre la decisión.</p></div><img class="qr" src="../../../evidencia/recursos/v5/qr_repositorio_v5.png" alt="Código QR del repositorio"></div>
+      </div>
+      <div class="card teal" style="display:flex;flex-direction:column;justify-content:space-between"><div><span class="label">Conclusión defendible</span><div class="verdict"><span class="dot"></span>CONSERVAR A</div><h2 style="font-size:2vw;margin:1vw 0">No migrar a B o C con la evidencia actual</h2><p class="small">La mejora futura más plausible no es una GRU más grande: es mejor identidad, nueva evidencia temporal, costos reales y una prueba en operación.</p></div><div class="callout"><span class="dot"></span><div><b>Uso previsto:</b> apoyar al analista de riesgo. <b>Uso excluido:</b> bloqueo autónomo, culpabilización o decisión sin apelación.</div></div></div>
+    </div>
+    <div class="footer"><span>Repositorio: DanielBarillasM/Proyecto-1_Grupo-1_DLYSI_Sec-30</span><span><b>8 / 8</b> · Gracias</span></div>
+    <aside class="notes"><h3>Cierre sugerido</h3><p>Repita la respuesta en una frase: A es el candidato porque ofrece el mejor balance económico y la falsificación no demuestra valor del orden. La siguiente inversión debe ir a datos e identidad, no a complejidad arquitectónica.</p><p>Cierre invitando preguntas sobre protocolo temporal, prueba de permutación, umbral económico o limitaciones.</p></aside>
+  </section>
+
+  <div class="progress" aria-hidden="true"></div>
+  <div class="help">← → navegar · N notas · O vista general · F pantalla completa</div>
+  <nav class="controls" aria-label="Controles de presentación"><button id="prev" title="Anterior">←</button><button id="overview" title="Vista general">▦</button><button id="notes" title="Notas">N</button><button id="next" title="Siguiente">→</button></nav>
+  <script>
+    const slides=[...document.querySelectorAll('.slide')], progress=document.querySelector('.progress');let index=0;
+    function show(n){index=Math.max(0,Math.min(slides.length-1,n));slides.forEach((slide,i)=>slide.classList.toggle('active',i===index));progress.style.width=((index+1)/slides.length*100)+'%';history.replaceState(null,'','#'+(index+1))}
+    function toggleOverview(){document.body.classList.toggle('overview');document.body.classList.remove('show-notes')}
+    function toggleNotes(){document.body.classList.toggle('show-notes');document.body.classList.remove('overview')}
+    function fullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
+    document.getElementById('prev').onclick=()=>show(index-1);document.getElementById('next').onclick=()=>show(index+1);document.getElementById('overview').onclick=toggleOverview;document.getElementById('notes').onclick=toggleNotes;
+    slides.forEach((slide,i)=>slide.addEventListener('click',()=>{if(document.body.classList.contains('overview')){document.body.classList.remove('overview');show(i)}}));
+    document.addEventListener('keydown',event=>{const key=event.key.toLowerCase();if(['arrowright',' ','pagedown'].includes(key)){event.preventDefault();show(index+1)}if(['arrowleft','pageup'].includes(key)){event.preventDefault();show(index-1)}if(key==='home')show(0);if(key==='end')show(slides.length-1);if(key==='n')toggleNotes();if(key==='o')toggleOverview();if(key==='f')fullscreen();if(key==='escape'){document.body.classList.remove('show-notes','overview')}});
+    const initial=Math.max(0,Math.min(slides.length-1,(parseInt(location.hash.slice(1))||1)-1));show(initial);
+  </script>
+</body>
+</html>'''
+
+    for marker, value in replacements.items():
+        page = page.replace(marker, value)
+
+    output_dir = root / "entregables" / "presentacion" / "v5"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output = output_dir / "presentacion.html"
+    output.write_text(page, encoding="utf-8", newline="\n")
+
+    if export_pdf:
+        candidates = [
+            shutil.which("chrome"),
+            Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+            Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+            shutil.which("msedge"),
+            Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+            Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+        ]
+        edge = next((str(item) for item in candidates if item and Path(item).exists()), None)
+        if edge:
+            with tempfile.TemporaryDirectory(prefix="proyecto1_v5_edge_") as temp:
+                temp_dir = Path(temp)
+                temp_pdf = temp_dir / "presentacion_v5.pdf"
+                subprocess.run(
+                    [
+                        edge,
+                        "--headless",
+                        "--disable-gpu",
+                        "--no-pdf-header-footer",
+                        "--run-all-compositor-stages-before-draw",
+                        "--virtual-time-budget=2000",
+                        f"--user-data-dir={temp_dir / 'profile'}",
+                        f"--print-to-pdf={temp_pdf}",
+                        output.resolve().as_uri(),
+                    ],
+                    check=False,
+                    capture_output=True,
+                )
+                if temp_pdf.exists() and temp_pdf.stat().st_size > 0:
+                    shutil.copy2(temp_pdf, output.with_suffix(".pdf"))
+    return output
+
+
+if __name__ == "__main__":
+    print(build_presentation())
