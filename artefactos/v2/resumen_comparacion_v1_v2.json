@@ -1,9 +1,0 @@
-{
-  "referencia": "A_V1",
-  "candidato_recomendado": "LightGBM_depured_V2",
-  "delta_auc_pr": 0.025075114886745187,
-  "delta_recall": -0.018812844631852066,
-  "delta_costo_q": -115500.0,
-  "reduccion_costo_relativa": 0.018648221879934514,
-  "interpretacion": "V2 mejora ranking y costo bajo el supuesto académico, pero reduce recall; requiere seleccionar el umbral según la prioridad operativa."
-}
