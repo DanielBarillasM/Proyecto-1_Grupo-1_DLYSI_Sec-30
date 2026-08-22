@@ -1,0 +1,11 @@
+# Entorno exacto comprobado para entrenamiento y evaluación V4 (Python 3.13.1, CPU)
+catboost==1.2.10
+joblib==1.5.3
+kagglehub==0.4.1
+lightgbm==4.7.0
+matplotlib==3.10.1
+numpy==2.2.2
+optuna==4.9.0
+pandas==2.2.3
+scikit-learn==1.8.0
+xgboost==3.4.1

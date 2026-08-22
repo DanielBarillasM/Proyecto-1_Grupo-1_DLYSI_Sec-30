@@ -1,0 +1,7 @@
+modelo,columna,auc_pr_seleccion,roc_auc_seleccion
+LightGBM_expertos_ProductCD,score_segment_lgb,0.607841461381805,0.9213488824896301
+Stacking_experimental,score_stack_raw,0.6007047055124016,0.9016412775466638
+LightGBM_hard_negative,score_hard_lgb,0.5884919238207758,0.9197207216855855
+XGBoost_piloto,score_xgboost,0.5825991367967212,0.932447572139076
+LightGBM_global,score_lgb,0.5819705036222517,0.918661354185344
+CatBoost_piloto,score_catboost,0.48553429087255684,0.9049870497236859
