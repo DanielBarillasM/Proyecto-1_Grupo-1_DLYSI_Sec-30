@@ -311,7 +311,8 @@ Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informativ
     return text
 
 
-def build_report() -> Path:
+def _build_report_legacy() -> Path:
+    """Constructor histórico conservado para trazabilidad; no usar en V5 final."""
     center_a = R["economia_mensual"]["A_V4"]["12"]
     center_b = R["economia_mensual"]["B_GRU"]["12"]
     center_c = R["economia_mensual"]["C_fusion"]["12"]
@@ -381,6 +382,14 @@ Recomendación&Sección 5&Complementar con revisión&Requiere cohorte nueva\\\bo
         for _ in range(2):
             subprocess.run([pdflatex, "-interaction=nonstopmode", "-halt-on-error", "-output-directory", str(out_dir), str(out)], cwd=out_dir, check=False, capture_output=True)
     return out
+
+
+def build_report() -> Path:
+    """Compila el informe V5 canónico sin volver a generar una plantilla antigua."""
+
+    from report_v5 import compile_report
+
+    return compile_report(ROOT)
 
 
 def build_slides() -> Path:
