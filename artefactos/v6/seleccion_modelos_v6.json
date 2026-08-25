@@ -1,0 +1,33 @@
+{
+  "A": {
+    "opciones_auc_pr_model_select": {
+      "A_V4": 0.607841461381805,
+      "A_logistica": 0.5588429326373276,
+      "A_refuerzo_LGBM": 0.6147317366680423
+    },
+    "auc_pr_subventanas_model_select": {
+      "A_V4": [
+        0.6333850481833535,
+        0.591496192228358
+      ],
+      "A_logistica": [
+        0.605732885429369,
+        0.5199069197119266
+      ],
+      "A_refuerzo_LGBM": [
+        0.6506183874515301,
+        0.5796268024351725
+      ]
+    },
+    "seleccionado": "A_V4",
+    "regla": "ganancia global >= mínima y no degradar ninguna de dos subventanas cronológicas",
+    "ganancia_minima_exigida": 0.002
+  },
+  "B": {
+    "opciones_auc_pr_model_select": {
+      "B_GRU": 0.48538786335587913,
+      "B_TCN": 0.5198777467148328
+    },
+    "seleccionado": "B_TCN"
+  }
+}

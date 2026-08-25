@@ -1,0 +1,74 @@
+[
+  {
+    "archivo": "artefactos/v6/calibradores_v6.joblib",
+    "bytes": 1913
+  },
+  {
+    "archivo": "artefactos/v6/contrato_entrada_salida_v6.json",
+    "bytes": 2214
+  },
+  {
+    "archivo": "artefactos/v6/control_regresion_logistica_v6.joblib",
+    "bytes": 2353
+  },
+  {
+    "archivo": "artefactos/v6/curvas_umbral_v6.csv",
+    "bytes": 220132
+  },
+  {
+    "archivo": "artefactos/v6/falsos_negativos_alto_monto_v6.csv",
+    "bytes": 1777
+  },
+  {
+    "archivo": "artefactos/v6/manifiesto_v6.json",
+    "bytes": 1576
+  },
+  {
+    "archivo": "artefactos/v6/metricas_segmentos_v6.csv",
+    "bytes": 2929
+  },
+  {
+    "archivo": "artefactos/v6/modelo_A_refuerzo_causal_v6.joblib",
+    "bytes": 560895
+  },
+  {
+    "archivo": "artefactos/v6/modelo_b_gru_v6.pt",
+    "bytes": 495120
+  },
+  {
+    "archivo": "artefactos/v6/modelo_b_tcn_v6.pt",
+    "bytes": 389068
+  },
+  {
+    "archivo": "artefactos/v6/modelo_C_fusion_condicionada_v6.joblib",
+    "bytes": 1601
+  },
+  {
+    "archivo": "artefactos/v6/modelo_D_autoencoder_v6.pt",
+    "bytes": 796525
+  },
+  {
+    "archivo": "artefactos/v6/predicciones_benchmark_v6.csv",
+    "bytes": 12471322
+  },
+  {
+    "archivo": "artefactos/v6/predicciones_validacion_v6.csv",
+    "bytes": 12498974
+  },
+  {
+    "archivo": "artefactos/v6/preprocesamiento_secuencial_v6.joblib",
+    "bytes": 27373
+  },
+  {
+    "archivo": "artefactos/v6/resultados_v6.json",
+    "bytes": 17902
+  },
+  {
+    "archivo": "artefactos/v6/seleccion_modelos_v6.json",
+    "bytes": 802
+  },
+  {
+    "archivo": "artefactos/v6/umbrales_v6.json",
+    "bytes": 115
+  }
+]

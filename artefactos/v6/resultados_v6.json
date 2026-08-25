@@ -1,0 +1,640 @@
+{
+  "version": "6.0",
+  "estado_benchmark": "historico_reutilizado_no_ciego",
+  "pregunta": "¿El orden aporta señal incremental, bajo qué condiciones y cuánto vale económicamente?",
+  "configuracion": {
+    "seed": 2026,
+    "train_fraction": 0.7,
+    "development_fraction": 0.85,
+    "sequence_length": 32,
+    "batch_size": 4096,
+    "epochs": 6,
+    "patience": 2,
+    "hidden_size": 96,
+    "event_size": 128,
+    "dropout": 0.18,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "min_category_frequency": 20,
+    "max_category_levels": 1200,
+    "cost_fn_q": 4200.0,
+    "cost_fp_q": 180.0,
+    "recall_floor": 0.75,
+    "hypothesis_ap_gain": 0.01,
+    "hypothesis_cost_reduction": 0.05,
+    "monthly_cards": 1400000,
+    "monthly_transactions_scenarios": [
+      5,
+      12,
+      20
+    ],
+    "permutation_repetitions": 5,
+    "model_selection_ap_min_gain": 0.002,
+    "order_material_ap_drop": 0.01,
+    "alert_growth_tolerance": 0.1
+  },
+  "entorno": {
+    "python": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "torch": "2.13.0+cpu",
+    "lightgbm": "4.7.0",
+    "plataforma": "Windows-10-10.0.19045-SP0",
+    "cpu": 8
+  },
+  "datos": {
+    "origen": "IEEE-CIS Fraud Detection / Vesta Corporation (Kaggle)",
+    "url": "https://www.kaggle.com/competitions/ieee-fraud-detection/overview",
+    "filas": 590540,
+    "fraudes": 20663,
+    "prevalencia": 0.03499000914417313,
+    "particiones": {
+      "train": {
+        "n": 413378,
+        "prevalencia": 0.03516878014795175,
+        "dt_min": 86400,
+        "dt_max": 10437996
+      },
+      "validation": {
+        "n": 88581,
+        "prevalencia": 0.03434145019812375,
+        "dt_min": 10438003,
+        "dt_max": 13151840
+      },
+      "benchmark_historico": {
+        "n": 88581,
+        "prevalencia": 0.03480430340592226,
+        "dt_min": 13151880,
+        "dt_max": 15811131
+      }
+    }
+  },
+  "secuencias": {
+    "entidad_proxy": [
+      "card1",
+      "card2",
+      "card3",
+      "card5",
+      "addr1"
+    ],
+    "identidad_aproximada": true,
+    "longitud_maxima": 32,
+    "porcentaje_con_3": 88.38842415416399,
+    "porcentaje_con_8": 76.32488908456668,
+    "porcentaje_con_16": 66.21532834354997,
+    "porcentaje_con_32": 55.285162732414406,
+    "entidades": 42946,
+    "mediana_transacciones_entidad": 2.0,
+    "p90_transacciones_entidad": 21.0
+  },
+  "modelos": {
+    "A": "Baseline competitivo sin orden; opción seleccionada: A_V4",
+    "B": "Modelo secuencial causal; opción seleccionada por validación: B_TCN",
+    "C": "Fusión logística A/B/D condicionada por calidad de identidad e historial",
+    "D": "Encoder–decoder PyTorch entrenado solo con transacciones legítimas; error de reconstrucción como anomalía",
+    "control": "Regresión logística sobre A y variables causales"
+  },
+  "seleccion": {
+    "A": {
+      "opciones_auc_pr_model_select": {
+        "A_V4": 0.607841461381805,
+        "A_logistica": 0.5588429326373276,
+        "A_refuerzo_LGBM": 0.6147317366680423
+      },
+      "auc_pr_subventanas_model_select": {
+        "A_V4": [
+          0.6333850481833535,
+          0.591496192228358
+        ],
+        "A_logistica": [
+          0.605732885429369,
+          0.5199069197119266
+        ],
+        "A_refuerzo_LGBM": [
+          0.6506183874515301,
+          0.5796268024351725
+        ]
+      },
+      "seleccionado": "A_V4",
+      "regla": "ganancia global >= mínima y no degradar ninguna de dos subventanas cronológicas",
+      "ganancia_minima_exigida": 0.002
+    },
+    "B": {
+      "opciones_auc_pr_model_select": {
+        "B_GRU": 0.48538786335587913,
+        "B_TCN": 0.5198777467148328
+      },
+      "seleccionado": "B_TCN"
+    }
+  },
+  "hipotesis_C": {
+    "declaracion_previa": "Creemos que una fusión condicionada por la calidad de identidad e historial mejorará AUC-PR y costo porque el puntaje secuencial solo debería influir cuando la historia sea suficientemente fiable. La consideraremos útil si incrementa AUC-PR al menos 0.01 y reduce el costo al menos 5% frente al mejor modelo individual, manteniendo recall mayor o igual a 0.75.",
+    "auc_pr_gain": -0.017036689652738746,
+    "cost_reduction": 0.006300988260263978,
+    "recall": 0.7738970588235294,
+    "success": false,
+    "control_individual": "A"
+  },
+  "bloques_validacion": {
+    "early": [
+      0,
+      31003
+    ],
+    "meta_fit": [
+      31003,
+      44290
+    ],
+    "model_select": [
+      44290,
+      53148
+    ],
+    "calibration": [
+      53148,
+      62006
+    ],
+    "threshold": [
+      62006,
+      70864
+    ],
+    "evaluation": [
+      70864,
+      88581
+    ]
+  },
+  "entrenamiento_B": {
+    "B_GRU": [
+      {
+        "epoch": 1,
+        "loss": 0.3717235427908485,
+        "early_auc_pr": 0.5527740556641368
+      },
+      {
+        "epoch": 2,
+        "loss": 0.29494446613407954,
+        "early_auc_pr": 0.5878333617815883
+      },
+      {
+        "epoch": 3,
+        "loss": 0.2647612423398391,
+        "early_auc_pr": 0.6074383869371969
+      },
+      {
+        "epoch": 4,
+        "loss": 0.24284349382428339,
+        "early_auc_pr": 0.6210478701394344
+      },
+      {
+        "epoch": 5,
+        "loss": 0.22909819166242298,
+        "early_auc_pr": 0.6212443224396956
+      },
+      {
+        "epoch": 6,
+        "loss": 0.21540509026380322,
+        "early_auc_pr": 0.6284390805786046
+      }
+    ],
+    "B_TCN": [
+      {
+        "epoch": 1,
+        "loss": 0.3472455289852328,
+        "early_auc_pr": 0.5699447630174169
+      },
+      {
+        "epoch": 2,
+        "loss": 0.2846272360522463,
+        "early_auc_pr": 0.5996170187553662
+      },
+      {
+        "epoch": 3,
+        "loss": 0.2619892612051128,
+        "early_auc_pr": 0.6032092708147765
+      },
+      {
+        "epoch": 4,
+        "loss": 0.2450811516528831,
+        "early_auc_pr": 0.6075249980856948
+      }
+    ]
+  },
+  "entrenamiento_D": [
+    {
+      "epoch": 1,
+      "train_mse": 0.3934346129953198,
+      "early_legit_mse": 0.20923499763011932
+    },
+    {
+      "epoch": 2,
+      "train_mse": 0.1456236711354567,
+      "early_legit_mse": 0.10412170737981796
+    },
+    {
+      "epoch": 3,
+      "train_mse": 0.0990181245452996,
+      "early_legit_mse": 0.07382351905107498
+    },
+    {
+      "epoch": 4,
+      "train_mse": 0.0802874174304908,
+      "early_legit_mse": 0.05737138167023659
+    },
+    {
+      "epoch": 5,
+      "train_mse": 0.0708794563942957,
+      "early_legit_mse": 0.050259724259376526
+    },
+    {
+      "epoch": 6,
+      "train_mse": 0.06550734058984925,
+      "early_legit_mse": 0.04482145607471466
+    },
+    {
+      "epoch": 7,
+      "train_mse": 0.061114433737907516,
+      "early_legit_mse": 0.04082847759127617
+    },
+    {
+      "epoch": 8,
+      "train_mse": 0.05781793212887038,
+      "early_legit_mse": 0.038162849843502045
+    }
+  ],
+  "calibracion": {
+    "A": {
+      "brier_raw": 0.023674477128247703,
+      "brier_calibrado": 0.023674407836042695
+    },
+    "B": {
+      "brier_raw": 0.033773720264434814,
+      "brier_calibrado": 0.026073327184069836
+    },
+    "C": {
+      "brier_raw": 0.023876098771008453,
+      "brier_calibrado": 0.023711564007658774
+    },
+    "D": {
+      "brier_raw": 0.4150580157087759,
+      "brier_calibrado": 0.03187160711883064
+    }
+  },
+  "umbrales": {
+    "A": 0.03622414841207744,
+    "B": 0.03186983351203205,
+    "C": 0.03997457426261109,
+    "D": 0.029452351510628957
+  },
+  "evaluacion_interna": {
+    "A": {
+      "auc_pr": 0.5362383967442795,
+      "roc_auc": 0.9007998405499742,
+      "precision": 0.1473364801078894,
+      "recall": 0.8033088235294118,
+      "f1": 0.249002849002849,
+      "tn": 14644,
+      "fp": 2529,
+      "fn": 107,
+      "tp": 437,
+      "cost_q": 904620.0,
+      "cost_per_decision_q": 51.05943444149687,
+      "alertas_por_100k": 16740.983236439577,
+      "threshold": 0.03622414841207744
+    },
+    "B": {
+      "auc_pr": 0.3915281773561903,
+      "roc_auc": 0.8525953231988656,
+      "precision": 0.11082547843473294,
+      "recall": 0.7132352941176471,
+      "f1": 0.19184177997527813,
+      "tn": 14060,
+      "fp": 3113,
+      "fn": 156,
+      "tp": 388,
+      "cost_q": 1215540.0,
+      "cost_per_decision_q": 68.60868092792234,
+      "alertas_por_100k": 19760.681831009766,
+      "threshold": 0.03186983351203205
+    },
+    "C": {
+      "auc_pr": 0.5192017070915408,
+      "roc_auc": 0.9022882620118448,
+      "precision": 0.16542239685658153,
+      "recall": 0.7738970588235294,
+      "f1": 0.27258012301715767,
+      "tn": 15049,
+      "fp": 2124,
+      "fn": 123,
+      "tp": 421,
+      "cost_q": 898920.0,
+      "cost_per_decision_q": 50.73770954450528,
+      "alertas_por_100k": 14364.734435852572,
+      "threshold": 0.03997457426261109
+    },
+    "D": {
+      "auc_pr": 0.2171744477344433,
+      "roc_auc": 0.7581702617138395,
+      "precision": 0.05435512011810495,
+      "recall": 0.7444852941176471,
+      "f1": 0.10131332082551595,
+      "tn": 10127,
+      "fp": 7046,
+      "fn": 139,
+      "tp": 405,
+      "cost_q": 1852080.0,
+      "cost_per_decision_q": 104.53688547722527,
+      "alertas_por_100k": 42055.6527628831,
+      "threshold": 0.029452351510628957
+    }
+  },
+  "benchmark_historico": {
+    "A": {
+      "auc_pr": 0.5591557534208087,
+      "roc_auc": 0.9012684205635553,
+      "precision": 0.15778792491121257,
+      "recall": 0.8070061628284139,
+      "f1": 0.2639647764044348,
+      "tn": 72218,
+      "fp": 13280,
+      "fn": 595,
+      "tp": 2488,
+      "cost_q": 4889400.0,
+      "cost_per_decision_q": 55.19693839536695,
+      "alertas_por_100k": 17800.65702577302,
+      "threshold": 0.03622414841207744
+    },
+    "B": {
+      "auc_pr": 0.46538780628876636,
+      "roc_auc": 0.8766906395740597,
+      "precision": 0.12270560795051212,
+      "recall": 0.7849497242945184,
+      "f1": 0.21223415917561939,
+      "tn": 68196,
+      "fp": 17302,
+      "fn": 663,
+      "tp": 2420,
+      "cost_q": 5898960.0,
+      "cost_per_decision_q": 66.59396484573442,
+      "alertas_por_100k": 22264.368205371353,
+      "threshold": 0.03186983351203205
+    },
+    "C": {
+      "auc_pr": 0.5631992184927225,
+      "roc_auc": 0.9070276302316913,
+      "precision": 0.17142658122039564,
+      "recall": 0.7982484592928966,
+      "f1": 0.2822409541831527,
+      "tn": 73603,
+      "fp": 11895,
+      "fn": 622,
+      "tp": 2461,
+      "cost_q": 4753500.0,
+      "cost_per_decision_q": 53.66274934805433,
+      "alertas_por_100k": 16206.635734525462,
+      "threshold": 0.03997457426261109
+    },
+    "D": {
+      "auc_pr": 0.2286903148004774,
+      "roc_auc": 0.769198414536703,
+      "precision": 0.05607311581085258,
+      "recall": 0.8238728511190399,
+      "f1": 0.10499989665364502,
+      "tn": 42740,
+      "fp": 42758,
+      "fn": 543,
+      "tp": 2540,
+      "cost_q": 9977040.0,
+      "cost_per_decision_q": 112.63182849595286,
+      "alertas_por_100k": 51137.37708989512,
+      "threshold": 0.029452351510628957
+    }
+  },
+  "falsificaciones": {
+    "original_internal": {
+      "auc_pr": 0.3915281773561903,
+      "roc_auc": 0.8525953231988656,
+      "precision": 0.11082547843473294,
+      "recall": 0.7132352941176471,
+      "f1": 0.19184177997527813,
+      "tn": 14060,
+      "fp": 3113,
+      "fn": 156,
+      "tp": 388,
+      "cost_q": 1215540.0,
+      "cost_per_decision_q": 68.60868092792234,
+      "alertas_por_100k": 19760.681831009766,
+      "threshold": 0.03186983351203205
+    },
+    "permutaciones": [
+      {
+        "seed": 2026,
+        "auc_pr": 0.39872279273979044,
+        "roc_auc": 0.8571243847215706,
+        "precision": 0.11396011396011396,
+        "recall": 0.7352941176470589,
+        "f1": 0.1973359644795264,
+        "tn": 14063,
+        "fp": 3110,
+        "fn": 144,
+        "tp": 400,
+        "cost_q": 1164600.0,
+        "cost_per_decision_q": 65.73347632217644,
+        "alertas_por_100k": 19811.480498955807,
+        "threshold": 0.03186983351203205
+      },
+      {
+        "seed": 2027,
+        "auc_pr": 0.40568491574971066,
+        "roc_auc": 0.8575233309127529,
+        "precision": 0.1115549215406562,
+        "recall": 0.71875,
+        "f1": 0.19313410718695975,
+        "tn": 14059,
+        "fp": 3114,
+        "fn": 153,
+        "tp": 391,
+        "cost_q": 1203120.0,
+        "cost_per_decision_q": 67.90765931026698,
+        "alertas_por_100k": 19783.25901676356,
+        "threshold": 0.03186983351203205
+      },
+      {
+        "seed": 2028,
+        "auc_pr": 0.4007322701954623,
+        "roc_auc": 0.8587886764791516,
+        "precision": 0.11476817401259301,
+        "recall": 0.7371323529411765,
+        "f1": 0.1986131748390292,
+        "tn": 14080,
+        "fp": 3093,
+        "fn": 143,
+        "tp": 401,
+        "cost_q": 1157340.0,
+        "cost_per_decision_q": 65.32370040074505,
+        "alertas_por_100k": 19721.17175594062,
+        "threshold": 0.03186983351203205
+      },
+      {
+        "seed": 2029,
+        "auc_pr": 0.40156097709985356,
+        "roc_auc": 0.8571006748795134,
+        "precision": 0.11383737517831669,
+        "recall": 0.7334558823529411,
+        "f1": 0.19708570017288218,
+        "tn": 14067,
+        "fp": 3106,
+        "fn": 145,
+        "tp": 399,
+        "cost_q": 1168080.0,
+        "cost_per_decision_q": 65.92989783823447,
+        "alertas_por_100k": 19783.25901676356,
+        "threshold": 0.03186983351203205
+      },
+      {
+        "seed": 2030,
+        "auc_pr": 0.4013035435991262,
+        "roc_auc": 0.8567916976375363,
+        "precision": 0.11335801765878667,
+        "recall": 0.7316176470588235,
+        "f1": 0.19630086313193587,
+        "tn": 14060,
+        "fp": 3113,
+        "fn": 146,
+        "tp": 398,
+        "cost_q": 1173540.0,
+        "cost_per_decision_q": 66.23807642377378,
+        "alertas_por_100k": 19817.124795394255,
+        "threshold": 0.03186983351203205
+      }
+    ],
+    "permutation_mean_auc_pr": 0.40160089987678865,
+    "permutation_std_auc_pr": 0.0022718810906199967,
+    "order_auc_pr_drop": -0.010072722520598376,
+    "orden_material": false,
+    "historia_3": {
+      "auc_pr": 0.38474344792787013,
+      "roc_auc": 0.8555289210833695,
+      "precision": 0.121571072319202,
+      "recall": 0.7169117647058824,
+      "f1": 0.20788912579957355,
+      "tn": 14355,
+      "fp": 2818,
+      "fn": 154,
+      "tp": 390,
+      "cost_q": 1154040.0,
+      "cost_per_decision_q": 65.13743861827624,
+      "alertas_por_100k": 18106.902974544224,
+      "threshold": 0.03186983351203205
+    },
+    "historia_8": {
+      "auc_pr": 0.37736715891656664,
+      "roc_auc": 0.8519917658876279,
+      "precision": 0.12259774685222001,
+      "recall": 0.6801470588235294,
+      "f1": 0.20774845592363841,
+      "tn": 14525,
+      "fp": 2648,
+      "fn": 174,
+      "tp": 370,
+      "cost_q": 1207440.0,
+      "cost_per_decision_q": 68.15149291640797,
+      "alertas_por_100k": 17034.486651238924,
+      "threshold": 0.03186983351203205
+    },
+    "historia_16": {
+      "auc_pr": 0.38603025048658385,
+      "roc_auc": 0.8527866075679674,
+      "precision": 0.11582777440873257,
+      "recall": 0.7022058823529411,
+      "f1": 0.19885476314419573,
+      "tn": 14257,
+      "fp": 2916,
+      "fn": 162,
+      "tp": 382,
+      "cost_q": 1205280.0,
+      "cost_per_decision_q": 68.02957611333747,
+      "alertas_por_100k": 18614.88965400463,
+      "threshold": 0.03186983351203205
+    }
+  },
+  "candidato": {
+    "modelo": "A",
+    "threshold": 0.03622414841207744,
+    "confirmatorio": false
+  },
+  "economia_mensual": {
+    "A": {
+      "5": {
+        "decisiones_mensuales": 7000000,
+        "costo_mensual_q": 386378568.76756865,
+        "ahorro_vs_A_q": 0.0
+      },
+      "12": {
+        "decisiones_mensuales": 16800000,
+        "costo_mensual_q": 927308565.0421648,
+        "ahorro_vs_A_q": 0.0
+      },
+      "20": {
+        "decisiones_mensuales": 28000000,
+        "costo_mensual_q": 1545514275.0702746,
+        "ahorro_vs_A_q": 0.0
+      }
+    },
+    "B": {
+      "5": {
+        "decisiones_mensuales": 7000000,
+        "costo_mensual_q": 466157753.9201409,
+        "ahorro_vs_A_q": -79779185.15257229
+      },
+      "12": {
+        "decisiones_mensuales": 16800000,
+        "costo_mensual_q": 1118778609.4083383,
+        "ahorro_vs_A_q": -191470044.3661735
+      },
+      "20": {
+        "decisiones_mensuales": 28000000,
+        "costo_mensual_q": 1864631015.6805637,
+        "ahorro_vs_A_q": -319116740.61028916
+      }
+    },
+    "C": {
+      "5": {
+        "decisiones_mensuales": 7000000,
+        "costo_mensual_q": 375639245.43638027,
+        "ahorro_vs_A_q": 10739323.331188358
+      },
+      "12": {
+        "decisiones_mensuales": 16800000,
+        "costo_mensual_q": 901534189.0473127,
+        "ahorro_vs_A_q": 25774375.994852062
+      },
+      "20": {
+        "decisiones_mensuales": 28000000,
+        "costo_mensual_q": 1502556981.745521,
+        "ahorro_vs_A_q": 42957293.32475343
+      }
+    },
+    "D": {
+      "5": {
+        "decisiones_mensuales": 7000000,
+        "costo_mensual_q": 788422799.47167,
+        "ahorro_vs_A_q": -402044230.7041014
+      },
+      "12": {
+        "decisiones_mensuales": 16800000,
+        "costo_mensual_q": 1892214718.732008,
+        "ahorro_vs_A_q": -964906153.6898433
+      },
+      "20": {
+        "decisiones_mensuales": 28000000,
+        "costo_mensual_q": 3153691197.88668,
+        "ahorro_vs_A_q": -1608176922.8164055
+      }
+    }
+  },
+  "decision": "Conservar el modelo que minimiza costo en evaluación interna; exigir una cohorte temporal nueva antes de cualquier afirmación confirmatoria.",
+  "limitaciones": [
+    "El benchmark es histórico, reutilizado y no ciego.",
+    "La identidad es una aproximación con campos anonimizados.",
+    "Los costos Q4,200/Q180 son un escenario académico.",
+    "No se auditó equidad, privacidad, deriva futura ni latencia productiva.",
+    "La señal del orden solo se acepta si la permutación reduce AUC-PR al menos 0.01."
+  ],
+  "duracion_segundos": 166.48463309998624
+}

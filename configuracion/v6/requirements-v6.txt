@@ -1,0 +1,9 @@
+kagglehub==0.4.1
+joblib==1.5.3
+lightgbm==4.7.0
+matplotlib==3.10.1
+numpy==2.2.2
+pandas==2.2.3
+scikit-learn==1.8.0
+torch==2.13.0
+
