@@ -103,7 +103,21 @@ def main() -> None:
             errors = [o for c in code for o in c.get("outputs", []) if o.output_type == "error"]
             require(not errors, f"Notebook con errores: {name}")
             source = "\n".join(c.source for c in notebook.cells)
-            require("<style>" in source and "class=\"hero\"" in source, f"Notebook sin HTML/CSS estético: {name}")
+            styled_with_classes = "<style>" in source and "class=\"hero\"" in source
+            styled_inline = source.count("<div style=") >= 3 and "linear-gradient" in source
+            require(styled_with_classes or styled_inline, f"Notebook sin HTML/CSS estético: {name}")
+            if name == "proyecto1_calderon_barillas.ipynb":
+                require(len(code) >= 15, "Notebook oficial contiene muy pocas celdas de código")
+                require(sum(len(c.source) for c in code) >= 20_000, "Notebook oficial no materializa suficiente implementación")
+                for symbol in (
+                    "GRURiskModel", "TCNRiskModel", "TransactionAutoencoder",
+                    "construir_candidatos_a", "matriz_fusion", "choose_threshold",
+                    "REENTRENAR_DESDE_CERO",
+                ):
+                    require(symbol in source, f"Notebook oficial no muestra la implementación de {symbol}")
+            else:
+                require(len(code) >= 8, "Notebook EDA contiene muy pocas celdas de código")
+                require("auditar_archivos_raw" in source, "Notebook EDA no permite auditar los CSV originales")
 
     report_pdf = ROOT / "entregables" / "informe" / "v7" / "informe.pdf"
     slides_pdf = ROOT / "entregables" / "presentacion" / "v7" / "presentacion.pdf"
@@ -113,7 +127,7 @@ def main() -> None:
         with pymupdf.open(report_pdf) as doc:
             require(doc.page_count == 7, f"Informe debe tener 7 páginas; tiene {doc.page_count}")
             text = "\n".join(page.get_text() for page in doc)
-        for term in ("Datos, EDA y protocolo", "Modelos A", "Valor del orden", "Apuesta C", "Economía", "Matriz de evidencias"):
+        for term in ("Datos, EDA y protocolo", "familia A", "Valor del orden", "Apuesta C", "Economía", "Decisión final"):
             require(term.lower() in text.lower(), f"Informe no contiene {term}")
     if slides_pdf.exists():
         with pymupdf.open(slides_pdf) as doc:
@@ -133,8 +147,9 @@ def main() -> None:
     for path in docs:
         require(path.exists() and path.stat().st_size > 0, f"Falta documento {path.relative_to(ROOT)}")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    for term in ("La versión que debe revisarse es V7", "Cómo interpretar las métricas", "Reproducción rápida", "Estructura y versiones", "Candidato al Proyecto Final", "Tres decisiones técnicas importantes", "Declaración de uso de inteligencia artificial", "Referencias APA 7"):
+    for term in ("La versión que debe revisarse es V7", "Dónde está el código", "AP, no PA", "Cómo interpretar las métricas", "Reproducción rápida", "Estructura y versiones", "Candidato al Proyecto Final", "Tres decisiones técnicas importantes", "Declaración de uso de inteligencia artificial", "Referencias APA 7"):
         require(term in readme, f"README no contiene: {term}")
+    require(len(readme.split()) >= 2_500, "README demasiado breve para documentar V7")
     for match in re.finditer(r"\[[^]]+\]\((?!https?://)([^)#]+)(?:#[^)]+)?\)", readme):
         target = ROOT / match.group(1)
         require(target.exists(), f"Ruta local rota en README: {match.group(1)}")

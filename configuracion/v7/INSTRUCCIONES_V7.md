@@ -38,6 +38,8 @@ python -u codigo/v7/proyecto1_v7_pipeline.py
 
 La corrida usa las 590,540 filas, ajusta A0–A5, integra B/D congelados, compara C1–C3, calibra, selecciona umbrales y ejecuta walk-forward. En CPU puede tomar entre 25 y 45 minutos; CatBoost es la fase más larga.
 
+El código mantenible de las arquitecturas secuenciales se encuentra en `codigo/v7/modelos_secuenciales_v7.py` y se materializa también en el notebook oficial. Los scores B/D de V6 se conservan únicamente como controles congelados de procedencia explícita; no sustituyen la implementación ni se presentan como modelos reentrenados por V7. En el cuaderno, `REENTRENAR_DESDE_CERO=False` audita los artefactos entregados y `True` lanza el pipeline completo.
+
 Si los modelos base ya están entrenados y solo debe reconstruirse el stacking corregido A5 y las métricas comunes:
 
 ```powershell
@@ -56,7 +58,7 @@ python codigo/v7/build_documentation_v7.py
 python codigo/v7/audit_project1_v7.py
 ```
 
-La documentación lee `artefactos/v7/resultados_v7.json` como fuente única de verdad. El informe debe producir siete páginas y la presentación ocho diapositivas.
+La documentación lee `artefactos/v7/resultados_v7.json` como fuente única de verdad. El informe debe producir exactamente siete páginas y la presentación exactamente ocho diapositivas, sin exceder los límites establecidos para esta entrega.
 
 ## 6. Lectura del resultado
 
@@ -70,6 +72,6 @@ datos/processed/v7/            asociación, correlación y auditoría de variabl
 evidencia/figuras/v7/          figuras reproducibles
 entregables/cuaderno/v7/       notebook oficial y EDA ejecutados
 entregables/informe/v7/        informe.tex e informe.pdf (7 páginas)
-entregables/presentacion/v7/   presentación HTML/PDF y guion (8 diapositivas)
+entregables/presentacion/v7/   presentación HTML/PDF con notas (8 diapositivas)
 entregables/ficha/v7/          ficha DOCX/PDF del repositorio
 ```

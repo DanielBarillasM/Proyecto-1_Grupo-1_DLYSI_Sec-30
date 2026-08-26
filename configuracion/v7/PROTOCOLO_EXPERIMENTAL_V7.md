@@ -23,7 +23,7 @@ La pregunta central es: **¿el orden de las transacciones aporta señal incremen
 - **A2:** LightGBM con representantes después de filtrado de redundancia por correlación.
 - **A3:** LightGBM híbrido con PCA aplicado solo al bloque `V1–V339`.
 - **A4:** CatBoost con categóricas nativas y selección *train-only*.
-- **A5:** ensamble tabular de A1–A4 ajustado exclusivamente en el bloque `meta_fit`.
+- **A5:** stacking logístico de A0–A4 y el score del control A de V6, ajustado exclusivamente en el bloque `meta_fit`. El control permanece congelado para medir valor incremental sin reentrenarlo durante V7.
 - **B:** mejor modelo secuencial causal congelado entre GRU y TCN de V6, sobre hasta 32 eventos. Se conservan los pesos y se vuelven a integrar sus puntajes en el protocolo común.
 - **D:** encoder–decoder PyTorch entrenado solo con transacciones legítimas; es control de anomalía y componente opcional de C, no sustituto de A/B/C.
 - **C:** fusión *out-of-time* de puntajes tabular, secuencial y de anomalía.

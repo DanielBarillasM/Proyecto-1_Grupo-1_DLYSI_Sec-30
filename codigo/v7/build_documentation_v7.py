@@ -73,6 +73,33 @@ El ganador interno es `{R['seleccion']['A']['seleccionado']}`. A obtiene AP {f(i
 
 La mejora no se declara estable. Tres ventanas son favorables, pero una cae {min(row['delta_ap_V7_vs_V6'] for row in gate['ventanas']):+.4f} AP y el límite previo era −0.005. El gate de promoción es **{str(gate['success']).lower()}**. V7 queda como candidato exploratorio mejor equilibrado, no como reemplazo confirmatorio.
 
+## Dónde está el código
+
+Los notebooks ya no son resúmenes decorativos. El cuaderno oficial [`entregables/cuaderno/v7/proyecto1_calderon_barillas.ipynb`](entregables/cuaderno/v7/proyecto1_calderon_barillas.ipynb) materializa las definiciones ejecutables que sostienen el experimento: configuración temporal; unión e ingeniería causal; codificación aprendida con entrenamiento; selección por correlación; PCA; regresión logística; LightGBM; CatBoost; stacking; GRU; TCN causal; encoder–decoder; calibración; umbral económico; apuesta C; métricas y falsificaciones. Las celdas están ejecutadas y conservan sus salidas.
+
+El interruptor `REENTRENAR_DESDE_CERO=False` evita que abrir o volver a ejecutar el informe dispare por accidente una corrida de varias horas. Con el valor predeterminado, el notebook reconstruye y verifica la evidencia congelada. Al cambiarlo a `True`, llama al pipeline íntegro. Esta separación distingue dos tareas que no deben confundirse: **leer y auditar una corrida reproducible** frente a **volver a estimar todos los modelos**.
+
+El código mantenible se distribuye así:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `codigo/v7/proyecto1_v7_pipeline.py` | Orquestación integral, datos, características causales, familia A, stacking, C, calibración, umbrales, evaluación y exportación. |
+| `codigo/v7/modelos_secuenciales_v7.py` | Implementaciones PyTorch de GRU, TCN causal y autoencoder, datasets, entrenamiento e inferencia. |
+| `codigo/v7/build_notebooks_v7.py` | Inserta esas implementaciones reales en los notebooks; no reemplaza el entrenamiento. |
+| `codigo/v7/finalize_v7.py` | Consolida predicciones, pruebas de orden, gates y resultados comunes. |
+| `codigo/v7/audit_project1_v7.py` | Verifica artefactos, métricas, notebooks ejecutados, símbolos de modelos, páginas, diapositivas, rutas y secretos. |
+| `entregables/cuaderno/v7/EDA_IEEE_CIS_Diagnostico_Datos_V7.ipynb` | Audita CSV originales, calidad, deriva, identidad proxy, asociación, correlación y PCA. |
+
+Por tanto, el entrenamiento no está escondido en un JSON ni delegado a una librería sin mostrar su preparación. Los JSON y CSV son la salida verificable de una ejecución; el pipeline y las clases PyTorch son la implementación.
+
+## Por qué aparece V6 en un experimento V7
+
+V7 conserva **scores congelados** de la TCN y del autoencoder entrenados en V6 como controles de referencia. Esto no significa que falte código V7: las arquitecturas se encuentran ahora en `modelos_secuenciales_v7.py` y también se muestran dentro del notebook oficial. Se congelan las predicciones porque la pregunta experimental de esta iteración es si las nuevas variables, la reducción y el stacking agregan valor frente a un control previamente observado. Reentrenar simultáneamente el control cambiaría dos factores a la vez y volvería ambigua la atribución de la mejora.
+
+La procedencia se declara en resultados, protocolo e informe. B es la TCN causal congelada; D es el encoder–decoder congelado; A5 puede incorporar su score como una característica de nivel meta; C contrasta la fusión. No se usan pesos V6 para aparentar que fueron producidos por V7, y el benchmark no vuelve a tratarse como ciego. En una siguiente cohorte confirmatoria sí deben congelarse el recipe completo, los umbrales y las versiones de dependencias antes de obtener etiquetas.
+
+Eliminar la referencia a V6 haría el repositorio visualmente más aislado, pero científicamente perdería el comparador que permite medir el incremento. La solución correcta fue volver autónoma la implementación de V7 y mantener explícito el origen del control.
+
 ## Resultado principal
 
 | Modelo | AP interna | ROC-AUC | Precisión | Recall | F1 | Costo | Alertas/100k |
@@ -86,12 +113,41 @@ C cuesta ligeramente menos, pero no se promueve: cambia AP {c['delta_ap']:+.4f},
 
 ## Cómo interpretar las métricas
 
+### AP, no PA
+
+La abreviatura correcta es **AP**, de *Average Precision* o precisión promedio. “PA” no es una métrica diferente en este proyecto; es una inversión accidental de las siglas. AP aproxima el área bajo la curva precisión–recall mediante un promedio ponderado de la precisión conseguida cada vez que aumenta el recall. En forma discreta:
+
+$$
+AP = \\sum_n (R_n-R_{{n-1}})P_n.
+$$
+
+Su referencia ingenua es aproximadamente la prevalencia positiva: {pct(R['datos']['prevalencia'])}. Por ello, AP {f(i['A']['auc_pr'],3)} representa un ranking muy superior al azar en este conjunto desbalanceado. No significa, sin embargo, “{100*i['A']['auc_pr']:.1f} % de fraudes acertados” ni “{100*i['A']['auc_pr']:.1f} % de alertas correctas”. Para responder esas preguntas se necesitan recall y precisión en el umbral operativo.
+
 - **AP o Average Precision** resume la curva precisión–recall a través de umbrales. AP {f(i['A']['auc_pr'],3)} no significa que {100*i['A']['auc_pr']:.1f} % de alertas sea correcta; esa pureza puntual la expresa la precisión ({pct(i['A']['precision'])}). AP es principal porque la clase positiva representa solo {pct(R['datos']['prevalencia'])}.
 - **ROC-AUC** aproxima la probabilidad de ordenar un fraude por encima de una operación legítima elegida al azar. Un ROC {f(i['A']['roc_auc'],3)} muestra buena separación global, pero puede coexistir con muchas falsas alarmas cuando hay millones de negativos.
 - **Precisión** responde: “de todas las alertas, ¿cuántas son fraude?”. A logra {pct(i['A']['precision'])}, aproximadamente una alerta verdadera por cada cinco.
 - **Recall** responde: “de todos los fraudes, ¿cuántos se detectaron?”. A recupera {pct(i['A']['recall'])}, casi ocho de diez.
 - **F1** combina precisión y recall, pero no conoce el costo en quetzales. Por eso se reporta junto con `Q4,200×FN + Q180×FP`.
 - **Precision@1 %** es {pct(i['A']['precision_at_1pct'])}: si solo se revisa el 1 % de mayor riesgo, casi nueve de diez seleccionadas son fraude. **Recall@1 %** es {pct(i['A']['recall_at_1pct'])}: esa capacidad limitada captura alrededor de tres de diez fraudes.
+
+### Lectura operativa conjunta
+
+Las métricas describen capas distintas. ROC-AUC y AP evalúan el **ordenamiento continuo** antes de fijar una política. Precisión, recall y F1 describen una **decisión binaria** en un umbral. Alertas por 100,000 mide la **carga de trabajo**. El costo traduce FP y FN a la función académica `Q4,200×FN + Q180×FP`. Un modelo puede ganar ROC-AUC y perder costo si sus errores se concentran cerca del umbral; también puede mejorar F1 y perjudicar recall, lo cual es costoso cuando un FN vale 23.3 veces un FP.
+
+En A, la precisión de {pct(i['A']['precision'])} implica que alrededor de cuatro de cada cinco alertas son falsas, pero eso no invalida automáticamente el modelo: con prevalencia {pct(R['datos']['prevalencia'])}, la muestra alertada está enriquecida más de cinco veces. Al mismo tiempo, {i['A']['alertas_por_100k']:,.0f} alertas por 100,000 pueden superar la capacidad de un equipo pequeño. La conclusión defendible es que el ranking es útil y captura {pct(i['A']['recall'])} de los fraudes con el umbral académico, mientras la política final necesita cupo diario y costos reales.
+
+## Arquitecturas y preguntas que responde cada una
+
+| Apuesta | Arquitectura | Qué prueba | Resultado V7 |
+|---|---|---|---|
+| A0 | Regresión logística regularizada | Si una frontera lineal bien controlada ya explica la señal. | Baseline interpretable y corroboración. |
+| A1–A4 | LightGBM completo/reducido/PCA y CatBoost | Si no linealidad, variables ampliadas, reducción o categóricas elevan AP. | Aportan diversidad; ninguna aislada desplaza de forma estable al control. |
+| A5 | Stacking logístico con predicciones fuera de tiempo | Si los errores complementarios mejoran ranking y costo. | Mejor candidato interno; gate estable no superado. |
+| B | TCN causal PyTorch | Si la historia ordenada aporta señal incremental. | Predice, pero las falsificaciones no atribuyen la ganancia al orden. |
+| C | Fusión A+B y variante A+B+D | Si combinar señal tabular, temporal y anomalía supera A bajo regla previa. | Rechazada: pierde AP y no mejora ventanas suficientes. |
+| D | Encoder–decoder entrenado con legítimas | Si el error de reconstrucción detecta fraude raro. | Recall alto, precisión baja; rareza no equivale a fraude. |
+
+La familia A responde “¿qué tan bien se ordena el riesgo sin requerir orden explícito?”. B responde “¿cambia la evidencia al destruir el orden?”. C responde “¿la combinación añade valor incremental?”. D responde “¿un modelo de normalidad ayuda bajo desbalance?”. Esta trazabilidad evita vender cuatro modelos como si persiguieran exactamente el mismo objetivo.
 
 ## Datos, orden y prevención de fuga
 
@@ -146,6 +202,36 @@ python codigo/v7/audit_project1_v7.py
 
 La descarga requiere aceptar las reglas de Kaggle. Los CSV, credenciales y tokens no se versionan. Consulte [`configuracion/v7/INSTRUCCIONES_V7.md`](configuracion/v7/INSTRUCCIONES_V7.md) para la corrida completa.
 
+### Ejecución desde los notebooks
+
+1. Coloque los cuatro CSV de la competencia en `datos/raw/` o defina `PROYECTO1_RAW`.
+2. Abra primero el EDA para confirmar dimensiones, columnas, prevalencia y orden temporal.
+3. Abra el notebook oficial. Mantenga `REENTRENAR_DESDE_CERO=False` para revisar la evidencia entregada.
+4. Para una corrida nueva, cambie el interruptor a `True`, asegure memoria y tiempo suficientes y ejecute desde el inicio.
+5. Reconstruya informe, presentación y documentación únicamente después de terminar modelos; todos leen `resultados_v7.json` como fuente única.
+6. Ejecute la auditoría. Un resultado `APROBADO` verifica integridad del paquete, no validez externa futura.
+
+### Problemas frecuentes
+
+- **No se encuentran los CSV:** revise `PROYECTO1_RAW`; no copie credenciales al repositorio.
+- **CatBoost o LightGBM no importan:** instale las versiones exactas de `requirements-v7.txt` dentro del mismo entorno de Jupyter.
+- **El notebook termina demasiado rápido:** con el interruptor en `False` está auditando la corrida congelada; no está simulando un reentrenamiento.
+- **Las métricas cambian:** confirme orden por `TransactionDT`, semillas, versiones y que ningún transformador fue ajustado con validación o benchmark.
+- **El PDF cambia de páginas:** use el builder correspondiente y vuelva a ejecutar la auditoría; el informe debe tener como máximo siete páginas y la presentación ocho diapositivas.
+
+## Correspondencia con la rúbrica
+
+| Evidencia solicitada | Ubicación V7 | Veredicto |
+|---|---|---|
+| Integridad de datos, entidad y protocolo temporal | EDA, cuaderno oficial, informe §2 y protocolo | Cubierta; se declaran límites de identidad proxy. |
+| Comparación común A/B con AP, precisión, recall y F1 | Cuaderno, `resultados_v7.json`, informe y diapositiva 6 | Cubierta sobre la misma población. |
+| Permutación y segundo intento sobre historia | Cuaderno, falsificaciones JSON, informe §4 y diapositiva 7 | Cubierta; resultado negativo reportado. |
+| Hipótesis previa, control y veredicto C | Protocolo, cuaderno, informe §5 | Cubierta; C no se promueve. |
+| Umbral, costo y recomendación | Cuaderno, umbrales, informe §6 y diapositiva 8 | Cubierta con costos explícitos. |
+| Reproducibilidad y comunicación | Código, notebooks ejecutados, artefactos, README, informe de 7 páginas y presentación de 8 | Cubierta y auditada automáticamente. |
+
+La cobertura formal de la rúbrica no convierte el resultado en validación externa. El punto pendiente es confirmatorio: una cohorte futura no observada con identidad y costos operativos más fiables.
+
 ## Estructura y versiones
 
 Las carpetas principales se mantienen en la raíz; cada una contiene subcarpetas por versión.
@@ -158,7 +244,7 @@ artefactos/v7/             modelos A0–A5/C, scores, umbrales y contrato
 evidencia/figuras/v7/      seis figuras reproducibles
 entregables/cuaderno/v7/   notebook oficial y EDA ejecutados
 entregables/informe/v7/    LaTeX y PDF de siete páginas
-entregables/presentacion/v7/ HTML/PDF de ocho diapositivas y guion
+entregables/presentacion/v7/ HTML/PDF de ocho diapositivas con notas integradas
 entregables/ficha/v7/      ficha DOCX/PDF y copia del README
 ```
 
@@ -220,39 +306,39 @@ def build_script() -> str:
     i, gate, fals = R["evaluacion_interna"], R["promocion_V7"], R["falsificaciones"]
     text = f"""# Guion de exposición · Proyecto 1 V7
 
-Duración sugerida: 9–11 minutos. El guion sigue las ocho diapositivas; presione `N` en el HTML para mostrar notas del expositor.
+Duración sugerida: 10–12 minutos. El guion sigue las ocho diapositivas; presione `N` en el HTML para mostrar notas del expositor.
 
 ## 1. Decisión ejecutiva · 60 segundos
 
 “Nuestra V7 mejora el promedio y la utilidad operativa, pero todavía no demuestra estabilidad suficiente. El candidato es A5, un stacking que conserva el baseline V6 y añade modelos nuevos. Internamente alcanza AP {f(i['A']['auc_pr'],3)}, precisión {pct(i['A']['precision'],1)}, recall {pct(i['A']['recall'],1)} y costo {money(i['A']['cost_q'])}. Frente a V6 mejora AP {gate['delta_ap']:+.3f}, reduce costo {pct(gate['reduccion_costo'],1)} y reduce alertas, pero una ventana temporal cae demasiado. Por eso decimos candidato exploratorio, no ganador definitivo.”
 
-## 2. Datos y protocolo · 75 segundos
+## 2. Datos y problema · 60 segundos
 
-“Usamos las 590,540 transacciones de IEEE-CIS Fraud Detection, con prevalencia 3.5 %. La separación es temporal: 70 % train, 15 % validación y 15 % benchmark histórico. Validación tiene seis bloques separados. Toda imputación, correlación, selección y PCA se aprende solo con pasado. El benchmark ya fue observado en versiones anteriores y no decide nada en V7.”
+“Usamos las 590,540 transacciones de IEEE-CIS Fraud Detection, publicadas en Kaggle con datos anonimizados de Vesta Corporation. Solo 3.5 % son fraude; por eso una accuracy de 96.5 % podría lograrse sin detectar un solo caso positivo. TransactionID une las tablas, TransactionDT define el reloj y ambos se excluyen como magnitudes predictivas.”
 
-## 3. EDA, correlación y PCA · 70 segundos
+## 3. Protocolo temporal · 70 segundos
+
+“La separación es 70 % train, 15 % validación y 15 % benchmark histórico. Validación se subdivide en early stopping, meta_fit, model_select, calibración, umbral y evaluación. Toda imputación, correlación, selección y PCA se aprende solo con pasado. El benchmark ya fue observado y no decide nada en V7.”
+
+## 4. EDA, correlación y PCA · 70 segundos
 
 “El EDA muestra alta dimensionalidad, faltantes, categorías y redundancia. Spearman elimina solo 34 representantes con correlación absoluta al menos 0.995. PCA se aplica únicamente a V1–V339: 105 componentes explican 95 % de varianza, pero la variante PCA no gana AP. La lección es que conservar varianza no garantiza conservar señal de fraude.”
 
-## 4. Modelos A · 80 segundos
+## 5. Diseño A/B/C/D y familia A · 110 segundos
 
-“A0 es regresión logística; A1 LightGBM completo; A2 LightGBM reducido; A3 PCA; A4 CatBoost; A5 stacking. Ningún modelo nuevo aislado generaliza mejor que V6. A5 sí mejora porque combina los logits de todos con el control fuerte. Se ajusta en meta_fit y se elige después, en model_select, donde obtiene AP {R['seleccion']['A']['auc_pr_model_select']['A5_ensamble_tabular']:.3f}.”
+“A0 es regresión logística; A1 LightGBM completo; A2 LightGBM reducido; A3 PCA; A4 CatBoost y A5 stacking. A es el candidato sin orden; B es la TCN causal; C integra A, B y opcionalmente D; D es el encoder-decoder entrenado con operaciones legítimas. Ningún modelo nuevo aislado generaliza mejor que V6. A5 sí mejora porque combina logits fuera de tiempo y alcanza AP de selección {R['seleccion']['A']['auc_pr_model_select']['A5_ensamble_tabular']:.3f}. C debía mejorar AP, costo, recall, alertas y estabilidad, no solo una cifra.”
 
-## 5. A/B/C/D · 90 segundos
+## 6. Resultados y significado de métricas · 95 segundos
 
-“A gana AP, precisión y F1. B, la TCN causal, queda en AP {i['B']['auc_pr']:.3f}. C fusiona A y B y cuesta un poco menos, pero pierde AP y no cumple la regla previa. D es un autoencoder de operaciones legítimas: logra recall, pero precisión de solo {pct(i['D']['precision'],1)}. Detecta rareza, no fraude de forma específica.”
+“A gana AP, precisión y F1. AP evalúa el ranking precisión-recall y se compara con prevalencia 0.035; no es la proporción puntual de alertas correctas. Esa proporción es precisión: A logra {pct(i['A']['precision'],1)}, aproximadamente una alerta correcta de cada cinco. B queda en AP {i['B']['auc_pr']:.3f}; C pierde AP y D logra precisión de solo {pct(i['D']['precision'],1)}. ROC describe separación global, pero no la carga de falsas alarmas.”
 
-## 6. Valor del orden · 75 segundos
+## 7. Valor del orden · 75 segundos
 
 “Probamos el orden en vez de asumirlo. Al barajar antecedentes cinco veces, AP cambia de {f(fals['original_internal']['auc_pr'],4)} a {f(fals['permutation_mean_auc_pr'],4)}. La diferencia es {fals['order_auc_pr_drop']:+.4f}: destruir el orden no perjudica. Recortar a 3, 8, 16 y 32 tampoco produce mejora monotónica. B aprende algo, pero no podemos atribuírselo al orden.”
 
-## 7. Economía y estabilidad · 80 segundos
+## 8. Economía, estabilidad y decisión · 105 segundos
 
-“Usamos costo Q4,200 por FN y Q180 por FP, con recall mínimo 0.75. A5 produce 1,700 FP y 124 FN internamente: Q826,800. Reduce las alertas a {i['A']['alertas_por_100k']:,.0f} por 100 mil. Sin embargo, las cuatro diferencias AP contra V6 son {'; '.join(f"{row['delta_ap_V7_vs_V6']:+.3f}" for row in gate['ventanas'])}; una cae −0.014. Esa deriva bloquea la promoción confirmatoria.”
-
-## 8. Cierre · 60 segundos
-
-“Conservamos A5 como candidato exploratorio. No promovemos B porque no demuestra orden; C porque falla la hipótesis; D porque genera demasiadas falsas alarmas. Lo que cambiaría la decisión es repetir la ganancia en una cohorte futura, sin caídas por ventana, con identidad real y costos operativos. El proyecto no solo entrega un score: entrega evidencia de qué funciona, qué no y bajo qué condiciones.”
+“Usamos costo Q4,200 por FN y Q180 por FP, con recall mínimo 0.75. A5 produce 1,700 FP y 124 FN internamente: Q826,800. Reduce las alertas a {i['A']['alertas_por_100k']:,.0f} por 100 mil. Sin embargo, las cuatro diferencias AP contra V6 son {'; '.join(f"{row['delta_ap_V7_vs_V6']:+.3f}" for row in gate['ventanas'])}; una cae −0.014. Conservamos A5 como candidato exploratorio, pero esa deriva bloquea la promoción confirmatoria. No promovemos B porque no demuestra orden; C porque falla la hipótesis; D porque genera demasiadas falsas alarmas. La decisión cambiaría con una cohorte futura, sin caídas por ventana, con identidad real y costos operativos.”
 
 ## Respuestas cortas ante preguntas
 
@@ -296,7 +382,7 @@ def build_ficha() -> None:
     doc.add_heading("Resultado", level=1)
     doc.add_paragraph("A5 combina A0–A4 con el control V6. Mejora AP y costo promedio, pero una de cuatro ventanas temporales se degrada; la promoción confirmatoria permanece pendiente. B no demuestra valor material del orden y C/D no cumplen sus criterios.")
     doc.add_heading("Qué contiene el repositorio", level=1)
-    doc.add_paragraph("Notebook oficial y EDA ejecutados; modelos, preprocesamiento, scores, umbrales y contrato; informe LaTeX/PDF de siete páginas; presentación HTML/PDF de ocho diapositivas; guion y auditoría reproducible.")
+    doc.add_paragraph("Notebook oficial y EDA ejecutados; modelos, preprocesamiento, scores, umbrales y contrato; informe LaTeX/PDF de siete páginas; presentación HTML/PDF de ocho diapositivas con notas; guion y auditoría reproducible.")
     pic = doc.add_paragraph(); pic.alignment = WD_ALIGN_PARAGRAPH.CENTER; pic.add_run().add_picture(str(qr_path), width=Inches(1.15))
     link = doc.add_paragraph(URL); link.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.save(out / "Ficha_Repositorio_Proyecto_1_V7.docx")

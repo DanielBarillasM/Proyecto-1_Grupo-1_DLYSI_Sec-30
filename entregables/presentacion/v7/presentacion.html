@@ -1,25 +1,218 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Proyecto 1 · V7</title>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proyecto 1 · V7 · Monitoreo transaccional</title>
 <style>
-:root{--navy:#071927;--navy2:#102a43;--blue:#184e77;--teal:#2a9d8f;--mint:#67d5c5;--gold:#f4b942;--red:#ff776e;--paper:#f7fbfd;--muted:#9eb6c8;--line:#ffffff24}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--navy);color:var(--paper);font-family:Inter,"Segoe UI",Arial,sans-serif}.slide{display:none;width:100vw;height:100vh;padding:4.5vh 5.7vw 5.7vh;position:relative;background:radial-gradient(circle at 90% 9%,#2a9d8f3d,transparent 27%),radial-gradient(circle at 5% 94%,#184e7752,transparent 31%),linear-gradient(132deg,#071927,#102a43 58%,#0b2334)}.slide.active{display:block}.slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 80%);pointer-events:none}.top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}.eyebrow{font-size:clamp(11px,1vw,17px);font-weight:900;letter-spacing:.16em;color:var(--mint);text-transform:uppercase}.chips{display:flex;gap:.45vw}.chip{padding:.35vw .7vw;border:1px solid #ffffff2e;border-radius:999px;background:#ffffff0c;font-size:clamp(9px,.7vw,13px);font-weight:800}h1{position:relative;z-index:1;margin:1.2vh 0 2.1vh;max-width:1120px;font-size:clamp(30px,3.5vw,61px);line-height:1.04;letter-spacing:-.035em}h2,h3,p{margin-top:0}.subtitle{max-width:960px;font-size:clamp(14px,1.25vw,22px);line-height:1.42;color:#c9dae5}.content{height:72vh;position:relative;z-index:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.2vw}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.9vw}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:.75vw}.card{padding:1vw 1.1vw;border:1px solid var(--line);border-radius:1vw;background:#ffffff0b;box-shadow:0 12px 32px #0002}.card.teal{border-color:#67d5c566;background:#2a9d8f20}.card.gold{border-color:#f4b94266;background:#f4b94216}.card.red{border-color:#ff776e55}.label{display:block;margin-bottom:.38vw;color:var(--muted);font-size:clamp(9px,.68vw,12px);font-weight:900;letter-spacing:.1em;text-transform:uppercase}.metric{font-size:clamp(26px,2.55vw,46px);font-weight:950;line-height:1;color:var(--mint)}.metric.gold{color:var(--gold)}.metric.red{color:var(--red)}.small{font-size:clamp(11px,.9vw,16px);line-height:1.4;color:#c7d9e5}.call{margin-top:.8vw;padding:.76vw .95vw;border-left:.42vw solid var(--teal);border-radius:.65vw;background:#ffffff10;font-size:clamp(12px,.96vw,17px);line-height:1.4}.call.warn{border-left-color:var(--gold)}.call.red{border-left-color:var(--red)}.split{display:grid;grid-template-columns:70fr 15fr 15fr;height:2.25vw;min-height:27px;border-radius:999px;overflow:hidden;margin:1vw 0 .4vw}.split span{display:flex;align-items:center;justify-content:center;font-size:clamp(8px,.68vw,12px);font-weight:900}.train{background:var(--teal)}.val{background:#327ea8}.bench{background:#c99329}.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:.55vw}.node{padding:.7vw;border:1px solid var(--line);border-radius:.75vw;background:#ffffff0a;text-align:center}.node b{display:block;color:var(--mint);font-size:clamp(16px,1.45vw,26px)}.chart{display:grid;grid-template-columns:1.3fr .9fr;gap:1.1vw;align-items:stretch}.figure{display:flex;align-items:center;justify-content:center;min-height:42vh;padding:.55vw;border-radius:1vw;background:white}.figure img{max-width:100%;max-height:47vh;object-fit:contain}table{width:100%;border-collapse:separate;border-spacing:0 .38vw;font-size:clamp(9px,.72vw,13px)}th{color:var(--muted);text-align:right;text-transform:uppercase;font-size:.68vw}th:first-child,td:first-child{text-align:left}td{padding:.55vw;background:#ffffff0b;text-align:right}tr.win td{background:#2a9d8f22;color:#f3fffc}.bars{display:grid;gap:.55vw}.barrow{display:grid;grid-template-columns:1.4fr 4fr .8fr;gap:.5vw;align-items:center;font-size:clamp(10px,.77vw,14px)}.track{height:.75vw;min-height:8px;border-radius:999px;background:#ffffff12;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--mint));border-radius:inherit}.fill.gold{background:linear-gradient(90deg,#c69028,var(--gold))}.verdict{display:inline-flex;align-items:center;gap:.5vw;padding:.5vw .8vw;border:1px solid #f4b94266;border-radius:999px;background:#f4b94215;color:var(--gold);font-weight:900}.notes{display:none;position:absolute;right:4vw;bottom:7vh;width:min(43vw,680px);max-height:51vh;overflow:auto;padding:1.1vw 1.25vw;border-radius:.9vw;background:#f7fbfd;color:#172033;box-shadow:0 20px 60px #0008;z-index:20}.notes p,.notes li{font-size:clamp(11px,.84vw,15px);line-height:1.42}.show-notes .slide.active .notes{display:block}.footer{position:absolute;left:5.7vw;right:11vw;bottom:2vh;display:flex;justify-content:space-between;color:var(--muted);font-size:clamp(9px,.7vw,12px);z-index:2}.footer b{color:var(--mint)}.progress{position:fixed;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--teal),var(--mint));z-index:30}.controls{position:fixed;right:1.2vw;bottom:1vh;display:flex;gap:.35vw;z-index:35}button{width:2.15vw;height:2.15vw;min-width:28px;min-height:28px;border:1px solid #ffffff30;border-radius:.55vw;background:#061521d9;color:white;font-weight:900}.help{position:fixed;left:50%;bottom:1.2vh;transform:translateX(-50%);color:#7895a8;font-size:10px;z-index:35}
-@page{size:13.333in 7.5in;margin:0}@media print{html,body{width:13.333in;height:auto;overflow:visible}.slide{display:block!important;width:13.333in;height:7.5in;page-break-after:always;padding:.38in .65in}.notes,.controls,.progress,.help{display:none!important}.figure{min-height:0}.figure img{max-height:3.4in}.footer{bottom:.2in;left:.65in;right:.65in}}
-</style></head><body>
+:root{--navy:#071927;--navy2:#102a43;--blue:#184e77;--teal:#2a9d8f;--mint:#67d5c5;--gold:#f4b942;--red:#ff776e;--paper:#f7fbfd;--muted:#9eb6c8;--line:#ffffff25}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--navy);color:var(--paper);font-family:Inter,"Segoe UI",Arial,sans-serif}
+.slide{display:none;width:100vw;height:100vh;padding:3.7vh 5.2vw 5.2vh;position:relative;background:radial-gradient(circle at 90% 9%,#2a9d8f42,transparent 27%),radial-gradient(circle at 5% 94%,#184e7758,transparent 31%),linear-gradient(132deg,#071927,#102a43 58%,#0b2334)}
+.slide.active{display:flex;flex-direction:column}
+.slide::before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:46px 46px;mask-image:linear-gradient(to bottom,black,transparent 82%);pointer-events:none}
+.top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
+.eyebrow{font-size:clamp(11px,.92vw,16px);font-weight:900;letter-spacing:.16em;color:var(--mint);text-transform:uppercase}
+.chips{display:flex;gap:.42vw;flex-wrap:wrap;justify-content:flex-end}
+.chip,.verdict{padding:.34vw .68vw;border:1px solid #ffffff32;border-radius:999px;background:#ffffff0e;font-size:clamp(9px,.66vw,12px);font-weight:850}
+.verdict{border-color:#f4b94266;background:#f4b94216;color:var(--gold)}
+h1{position:relative;z-index:1;margin:1.05vh 0 1.2vh;max-width:1200px;font-size:clamp(29px,3.15vw,56px);line-height:1.04;letter-spacing:-.035em}
+h2{font-size:clamp(17px,1.35vw,25px);margin:.25vw 0 .5vw}
+h3{font-size:clamp(14px,1.05vw,20px);margin:.2vw 0 .4vw}
+p{margin-top:0}
+.subtitle{max-width:1050px;margin-bottom:1.2vh;font-size:clamp(14px,1.13vw,20px);line-height:1.4;color:#c9dae5}
+.content{position:relative;z-index:1;display:flex;flex:1;min-height:0;flex-direction:column;gap:.75vw}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9vw}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75vw}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7vw}
+.grid6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.5vw}
+.fill{flex:1}
+.stretch>*{height:100%}
+.card{padding:.9vw 1vw;border:1px solid var(--line);border-radius:.85vw;background:#ffffff0c;box-shadow:0 12px 32px #0002}
+.card.compact{padding:.68vw .78vw}
+.card.teal,.card.positive{border-color:#67d5c56b;background:#2a9d8f20}
+.card.gold{border-color:#f4b94266;background:#f4b94216}
+.card.red,.card.negative{border-color:#ff776e66;background:#ff776e10}
+.label{display:block;margin-bottom:.32vw;color:var(--muted);font-size:clamp(9px,.64vw,12px);font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.metric{font-size:clamp(25px,2.35vw,43px);font-weight:950;line-height:1;color:var(--mint)}
+.metric.gold{color:var(--gold)}.metric.red{color:var(--red)}
+.small{font-size:clamp(11px,.83vw,15px);line-height:1.4;color:#c7d9e5}
+.micro{margin:.25vw 0 0;font-size:clamp(9px,.69vw,12px);line-height:1.3;color:#afc4d2}
+.call{padding:.7vw .88vw;border-left:.38vw solid var(--teal);border-radius:.58vw;background:#ffffff10;font-size:clamp(11px,.86vw,16px);line-height:1.38}
+.call.warn{border-left-color:var(--gold)}.call.red{border-left-color:var(--red)}
+.source{padding:.7vw .88vw;border:1px solid #67d5c550;border-radius:.65vw;background:#2a9d8f14;color:#dffbf5;font-size:clamp(10px,.76vw,14px);line-height:1.38}
+.source a{color:var(--mint)}
+.split{display:grid;grid-template-columns:70fr 15fr 15fr;height:2.45vw;min-height:30px;border-radius:999px;overflow:hidden}
+.split span{display:flex;align-items:center;justify-content:center;font-size:clamp(9px,.68vw,12px);font-weight:900}
+.train{background:var(--teal)}.val{background:#327ea8}.bench{background:#c99329}
+.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:.48vw}
+.node{padding:.68vw .4vw;border:1px solid var(--line);border-radius:.65vw;background:#ffffff0b;text-align:center}
+.node b{display:block;color:var(--mint);font-size:clamp(15px,1.25vw,23px)}
+.arrowflow{display:grid;grid-template-columns:1fr .3fr 1fr .3fr 1fr;gap:.45vw;align-items:center;text-align:center}
+.arrow{font-size:clamp(24px,2.2vw,40px);color:var(--gold)}
+.chart{display:grid;grid-template-columns:1.22fr .9fr;gap:.9vw;flex:1;min-height:0}
+.figure{display:flex;align-items:center;justify-content:center;min-height:0;padding:.45vw;border-radius:.85vw;background:white}
+.figure img{max-width:100%;max-height:100%;object-fit:contain}
+.figure.dual{display:grid;grid-template-columns:1fr 1fr;gap:.45vw}
+.figure.dual img{width:100%;max-height:31vh}
+table{width:100%;border-collapse:separate;border-spacing:0 .28vw;font-size:clamp(9px,.68vw,12px)}
+th{padding:.25vw;color:var(--muted);text-align:right;text-transform:uppercase;font-size:clamp(8px,.59vw,11px)}
+th:first-child,td:first-child{text-align:left}
+td{padding:.46vw;background:#ffffff0b;text-align:right}
+tr.winner td{background:#2a9d8f25;color:#f3fffc;font-weight:800}
+.bars{display:grid;gap:.48vw}
+.barrow{display:grid;grid-template-columns:.8fr 4fr .65fr;gap:.45vw;align-items:center;font-size:clamp(10px,.75vw,14px)}
+.track{height:.68vw;min-height:8px;border-radius:999px;background:#ffffff14;overflow:hidden}
+.barfill{height:100%;background:linear-gradient(90deg,var(--teal),var(--mint));border-radius:inherit}
+.balance{height:3vw;min-height:34px;display:grid;grid-template-columns:96.5fr 3.5fr;border-radius:999px;overflow:hidden}
+.balance span{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:clamp(9px,.72vw,13px)}
+.legit{background:#327ea8}.fraud{background:var(--red)}
+.metric-meaning{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.55vw}
+.metric-meaning .card{padding:.68vw}
+.notes{display:none;position:absolute;right:3.5vw;bottom:6vh;width:min(45vw,720px);max-height:54vh;overflow:auto;padding:1.05vw 1.2vw;border-radius:.85vw;background:#f7fbfd;color:#172033;box-shadow:0 20px 60px #0008;z-index:20}
+.notes p,.notes li{font-size:clamp(11px,.82vw,15px);line-height:1.42}
+.show-notes .slide.active .notes{display:block}
+.footer{position:absolute;left:5.2vw;right:10vw;bottom:1.7vh;display:flex;justify-content:space-between;color:var(--muted);font-size:clamp(9px,.66vw,12px);z-index:2}
+.footer b{color:var(--mint)}
+.progress{position:fixed;left:0;bottom:0;height:5px;background:linear-gradient(90deg,var(--teal),var(--mint));z-index:30}
+.controls{position:fixed;right:1.1vw;bottom:.8vh;display:flex;gap:.32vw;z-index:35}
+button{width:2vw;height:2vw;min-width:28px;min-height:28px;border:1px solid #ffffff30;border-radius:.5vw;background:#061521d9;color:white;font-weight:900}
+.help{position:fixed;left:50%;bottom:1vh;transform:translateX(-50%);color:#7895a8;font-size:10px;z-index:35}
+@page{size:13.333in 7.5in;margin:0}
+@media print{
+  html,body{width:13.333in;height:auto;overflow:visible}
+  .slide{display:flex!important;flex-direction:column;width:13.333in;height:7.5in;page-break-after:always;padding:.31in .60in .42in;overflow:hidden}
+  .notes,.controls,.progress,.help{display:none!important}
+  h1{margin:.06in 0 .08in;font-size:35px}
+  h2{font-size:18px}h3{font-size:15px}
+  .subtitle{margin-bottom:.08in;font-size:14px}
+  .content{min-height:0;gap:7px}
+  .grid2,.grid3,.grid4,.grid6,.chart{gap:7px}
+  .card{padding:8px 10px;border-radius:9px}
+  .card.compact{padding:6px 7px}
+  .metric{font-size:28px}
+  .small{font-size:11px;line-height:1.3}
+  .micro{font-size:9px;line-height:1.25}
+  .call,.source{padding:7px 9px;font-size:11px;line-height:1.3}
+  .figure img{max-height:3.45in}
+  table{font-size:9px;border-spacing:0 3px}th{font-size:8px}td{padding:4px}
+  .footer{bottom:.17in;left:.62in;right:.62in}
+}
+</style>
+</head>
+<body>
 
-<section class="slide active"><div class="top"><span class="eyebrow">Proyecto 1 · V7</span><div class="chips"><span class="chip">IEEE-CIS</span><span class="chip">Grupo 1</span><span class="chip">Sec. 30</span></div></div><h1>Mejor promedio; estabilidad todavía insuficiente</h1><p class="subtitle">A5 combina el baseline fuerte con modelos ampliados: reduce costo y falsas alarmas, pero no gana todas las ventanas temporales.</p><div class="content grid2"><div class="card teal"><span class="label">Decisión</span><div class="metric">A5</div><h2>Candidato exploratorio</h2><p class="small">AP interna 0.547 · costo Q826,800 · recall 77.2%</p><div class="call warn">No declarar reemplazo confirmatorio: una ventana cae −0.0135 AP.</div></div><div class="grid2"><div class="card"><span class="label">ΔAP vs V6</span><div class="metric">+0.011</div></div><div class="card"><span class="label">Reducción costo</span><div class="metric">8.7%</div></div><div class="card"><span class="label">Precisión</span><div class="metric">19.8%</div></div><div class="card"><span class="label">Alertas</span><div class="metric">11,966</div><p class="small">por 100 mil</p></div></div></div><div class="notes"><h3>Guion</h3><p>Abrir con la decisión, no con la arquitectura. V7 sí mejora el promedio y la operación, pero el protocolo exigía estabilidad. Por eso usamos “candidato exploratorio” y no “modelo definitivamente superior”.</p></div><div class="footer"><b>Wilson Calderón · Pablo Barillas</b><span>1 / 8</span></div></section>
+<section class="slide active">
+  <div class="top"><span class="eyebrow">Proyecto 1 · Versión 7</span><div class="chips"><span class="chip">IEEE-CIS</span><span class="chip">Grupo 1</span><span class="chip">Sección 30</span></div></div>
+  <h1>Mejor promedio; estabilidad todavía insuficiente</h1>
+  <p class="subtitle">A5 reduce costo y falsas alarmas frente a V6, pero una ventana temporal impide declararlo superior de forma confirmatoria.</p>
+  <div class="content">
+    <div class="grid2 fill stretch">
+      <div class="card teal"><span class="label">Decisión ejecutiva</span><div class="metric">A5</div><h2>Candidato exploratorio V7</h2><p class="small">Stacking tabular A0–A4 + control V6. Es la opción con mejor equilibrio interno entre ranking, precisión, F1, costo y carga de alertas.</p><div class="call warn"><b>No reemplaza aún a V6:</b> la tercera ventana cae −0.0135 AP y viola el gate de estabilidad.</div></div>
+      <div class="grid2 stretch"><div class="card"><span class="label">AP interna</span><div class="metric">0.547</div><p class="small">+0.011 frente a V6</p></div><div class="card"><span class="label">Costo interno</span><div class="metric">Q826,800</div><p class="small">−8.7%</p></div><div class="card"><span class="label">Precisión</span><div class="metric">19.8%</div><p class="small">≈ 1 fraude por 5 alertas</p></div><div class="card"><span class="label">Recall</span><div class="metric">77.2%</div><p class="small">420 de 544 fraudes</p></div></div>
+    </div>
+    <div class="source"><b>Datos:</b> IEEE-CIS Fraud Detection · Vesta Corporation · Kaggle · 590,540 transacciones · prevalencia 3.50%.</div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>Abrir con el veredicto. V7 mejora el promedio y la operación, pero el protocolo exigía estabilidad temporal. Por eso A5 es candidato exploratorio y no ganador definitivo.</p></div>
+  <div class="footer"><b>Wilson Calderón · Pablo Barillas</b><span>1 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Datos y protocolo</span><span class="verdict">Benchmark histórico, no ciego</span></div><h1>El tiempo manda: entrenar con pasado, decidir antes del final</h1><div class="content"><div class="grid4"><div class="card"><span class="label">Transacciones</span><div class="metric">590,540</div></div><div class="card"><span class="label">Fraudes</span><div class="metric">20,663</div></div><div class="card"><span class="label">Prevalencia</span><div class="metric">3.50%</div></div><div class="card"><span class="label">Columnas V7</span><div class="metric">465</div></div></div><div class="split"><span class="train">70% · TRAIN</span><span class="val">15% · VALIDACIÓN</span><span class="bench">15% · HISTÓRICO</span></div><div class="flow"><div class="node"><b>Early</b><span class="small">stopping</span></div><div class="node"><b>Meta</b><span class="small">stacking</span></div><div class="node"><b>Select</b><span class="small">A/C</span></div><div class="node"><b>Calibra</b><span class="small">probabilidad</span></div><div class="node"><b>Umbral</b><span class="small">costo</span></div><div class="node"><b>Evalúa</b><span class="small">gates</span></div></div><div class="call"><b>Sin fuga:</b> imputación, frecuencia, asociación, Spearman y PCA se ajustan solo en train y se reaprenden en cada walk-forward.</div></div><div class="notes"><h3>Guion</h3><p>Explicar que el 15% final ya fue observado en versiones anteriores. La evidencia decisiva de V7 está dentro de validación, subdividida cronológicamente. Esto evita seleccionar variables o umbrales con el futuro.</p></div><div class="footer"><b>IEEE-CIS · Vesta Corporation · Kaggle</b><span>2 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Datos y problema</span><span class="verdict">Clase minoritaria: 3.50%</span></div>
+  <h1>El reto no es acertar “legítimo”; es ordenar bien el fraude escaso</h1>
+  <div class="content">
+    <div class="grid4"><div class="card"><span class="label">Transacciones</span><div class="metric">590,540</div></div><div class="card"><span class="label">Fraudes</span><div class="metric">20,663</div></div><div class="card"><span class="label">Columnas V7</span><div class="metric">465</div></div><div class="card"><span class="label">Archivos unidos</span><div class="metric">2</div><p class="micro">transaction + identity</p></div></div>
+    <div class="balance"><span class="legit">96.50% legítimas</span><span class="fraud">3.50%</span></div>
+    <div class="grid3 fill stretch">
+      <div class="card"><span class="label">Unión</span><h2>TransactionID</h2><p class="small">Alinea las tablas transaccional y de identidad. Se excluye como magnitud predictiva para evitar ruido de identificación.</p></div>
+      <div class="card"><span class="label">Reloj</span><h2>TransactionDT</h2><p class="small">Ordena los eventos y define causalidad. No se entrega al modelo como número crudo.</p></div>
+      <div class="card gold"><span class="label">Métrica primaria</span><h2>Average Precision</h2><p class="small">Evalúa el ranking precisión–recall; su referencia ingenua es 0.035, no 0.50.</p></div>
+    </div>
+    <div class="source"><b>Fuente oficial:</b> <a href="https://www.kaggle.com/competitions/ieee-fraud-detection/overview">IEEE Computational Intelligence Society. (2019). IEEE-CIS Fraud Detection. Kaggle.</a> Datos anonimizados proporcionados por Vesta Corporation.</div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>Una accuracy de 96.5% se obtiene prediciendo todo como legítimo, por lo que no sirve como evidencia. AP, recall, precisión y costo sí muestran si el ranking recupera fraude sin desbordar alertas.</p></div>
+  <div class="footer"><b>IEEE-CIS · fuente documentada y reproducible</b><span>2 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">EDA y representación</span><span class="chip">train-only</span></div><h1>Correlación compacta; PCA no garantiza señal</h1><div class="content chart"><div class="figure"><img src="file:///C:/Users/Daniel%20Barillas/Desktop/Lab-3_Deep-Learning/v7_implementation/evidencia/figuras/v7/04_correlacion_pca_v7.png"></div><div><div class="grid2"><div class="card"><span class="label">Pares redundantes</span><div class="metric">34</div><p class="small">$|ρ_s|≥0.995$</p></div><div class="card"><span class="label">Retenidas</span><div class="metric">426</div><p class="small">tras correlación</p></div><div class="card"><span class="label">PCA 95%</span><div class="metric">105</div><p class="small">componentes V</p></div><div class="card"><span class="label">Mejor PCA</span><div class="metric red">0.513</div><p class="small">AP select</p></div></div><div class="call warn">PCA conserva varianza, no necesariamente la frontera minoritaria. A2 gana a A1 en selección, pero no generaliza solo.</div></div></div><div class="notes"><h3>Guion</h3><p>La correlación se usa solo para redundancia extrema y se conserva la variable con mayor asociación train-only. PCA se aplicó únicamente al bloque V con 32, 64 y 128 componentes. Ninguna variante reducida gana por sí sola en evaluación.</p></div><div class="footer"><b>EDA causal · 4 identidades proxy · 3 walk-forward</b><span>3 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Protocolo temporal</span><span class="verdict">Benchmark histórico, no ciego</span></div>
+  <h1>Cada decisión usa un bloque distinto y siempre anterior</h1>
+  <div class="content">
+    <div class="split"><span class="train">70% · TRAIN</span><span class="val">15% · VALIDACIÓN</span><span class="bench">15% · HISTÓRICO</span></div>
+    <div class="flow"><div class="node"><b>Early</b><span class="small">stopping</span></div><div class="node"><b>Meta</b><span class="small">stacking</span></div><div class="node"><b>Select</b><span class="small">A/C</span></div><div class="node"><b>Calibra</b><span class="small">score</span></div><div class="node"><b>Umbral</b><span class="small">costo</span></div><div class="node"><b>Evalúa</b><span class="small">gates</span></div></div>
+    <div class="grid2 fill stretch">
+      <div class="card teal"><span class="label">Transformaciones train-only</span><h2>Sin conocimiento del futuro</h2><p class="small">Imputación, frecuencias, asociación con el objetivo, selección, Spearman y PCA se ajustan solo con entrenamiento. En cada walk-forward se vuelven a aprender desde cero.</p><div class="call">Los agregados históricos de una operación utilizan exclusivamente eventos con tiempo anterior.</div></div>
+      <div class="card"><span class="label">Por qué seis subbloques</span><h2>Separar ajuste de evaluación</h2><p class="small">El metamodelo no se juzga con los datos que lo entrenaron; la calibración no fija el umbral; el umbral no decide el gate. Esta separación reduce sobreajuste por decisiones repetidas.</p><div class="call warn">El último 15% ya fue observado en V1–V6: se reporta, pero no selecciona V7.</div></div>
+    </div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>El protocolo es una parte del resultado. Una métrica más alta no es defendible si el preprocesamiento o el umbral vieron el futuro. La evidencia confirmatoria requerirá una cohorte nueva.</p></div>
+  <div class="footer"><b>70 / 15 / 15 · seis decisiones internas separadas</b><span>3 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Modelo A</span><span class="verdict">A5 gana model_select</span></div><h1>Seis candidatos, una mejora: conservar y combinar</h1><div class="content grid2"><div><div class="bars"><div class="barrow"><b>A0</b><div class="track"><div class="fill" style="width:44.0%"></div></div><span>0.286</span></div><div class="barrow"><b>A1</b><div class="track"><div class="fill" style="width:87.6%"></div></div><span>0.569</span></div><div class="barrow"><b>A2</b><div class="track"><div class="fill" style="width:88.6%"></div></div><span>0.576</span></div><div class="barrow"><b>A3</b><div class="track"><div class="fill" style="width:79.0%"></div></div><span>0.513</span></div><div class="barrow"><b>A4</b><div class="track"><div class="fill" style="width:65.9%"></div></div><span>0.428</span></div><div class="barrow"><b>A5</b><div class="track"><div class="fill" style="width:96.6%"></div></div><span>0.628</span></div></div><div class="call">A5 usa logits A0–A4 + control V6; el metamodelo se ajusta solo en <code>meta_fit</code>.</div></div><div class="grid2"><div class="card"><span class="label">A0</span><h2>Logística</h2><p class="small">Control lineal</p></div><div class="card"><span class="label">A1 / A2</span><h2>LightGBM</h2><p class="small">Completo / correlación</p></div><div class="card"><span class="label">A3 / A4</span><h2>PCA / CatBoost</h2><p class="small">Ablations</p></div><div class="card teal"><span class="label">A5</span><h2>Stacking</h2><p class="small">AP select 0.628</p></div></div></div><div class="notes"><h3>Guion</h3><p>La lección es que más variables o CatBoost no ganaron individualmente. A5 mejora porque retiene el patrón fuerte de V6 y deja que señales nuevas corrijan casos específicos mediante una fusión simple.</p></div><div class="footer"><b>Regresión · LightGBM · PCA · CatBoost · stacking</b><span>4 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">EDA y representación</span><span class="chip">Asociación · correlación · PCA · identidad</span></div>
+  <h1>Reducir redundancia ayuda; comprimir varianza no garantiza fraude</h1>
+  <div class="content chart">
+    <div class="figure"><img src="../../../evidencia/figuras/v7/04_correlacion_pca_v7.png" alt="Comparación de selección completa, correlación y PCA"></div>
+    <div class="content"><div class="grid2"><div class="card"><span class="label">Variables candidatas</span><div class="metric">460</div></div><div class="card"><span class="label">Pares eliminados</span><div class="metric">34</div><p class="micro">|ρs| ≥ 0.995</p></div><div class="card"><span class="label">Retenidas</span><div class="metric">426</div></div><div class="card"><span class="label">PCA 95%</span><div class="metric">105</div><p class="micro">componentes V</p></div></div><div class="card gold fill"><span class="label">Resultado de la ablation</span><h2>A2 selecciona mejor; A3 pierde señal</h2><p class="small">A2 alcanza AP 0.576 y PCA-128 obtiene 0.513 durante selección. PCA conserva varianza global, no necesariamente la frontera de una clase de 3.5%.</p><div class="call warn"><b>Identidad proxy:</b> cuatro claves pueden mezclar usuarios o fragmentar uno; esta limitación afecta directamente la utilidad de las secuencias.</div></div></div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>Correlación se usa para eliminar redundancia extrema, no para borrar variables por baja asociación marginal. PCA se limita al bloque V y se trata como ablation; el resultado obliga a conservar variables originales en el candidato.</p></div>
+  <div class="footer"><b>465 → 460 → 426 · PCA solo en V1–V339</b><span>4 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Comparación común</span><span class="chip">misma población · mismo horizonte</span></div><h1>A gana en ranking y operación; C no supera su regla</h1><div class="content chart"><div class="figure"><img src="file:///C:/Users/Daniel%20Barillas/Desktop/Lab-3_Deep-Learning/v7_implementation/evidencia/figuras/v7/01_comparacion_interna_v7.png"></div><div><table><thead><tr><th>Modelo</th><th>AP</th><th>Prec.</th><th>Recall</th><th>Costo</th></tr></thead><tbody><tr class="win"><td>A</td><td>0.547</td><td>19.8%</td><td>77.2%</td><td>Q826,800</td></tr><tr class=""><td>B</td><td>0.392</td><td>11.2%</td><td>70.8%</td><td>Q1,215,900</td></tr><tr class=""><td>C</td><td>0.543</td><td>19.4%</td><td>78.1%</td><td>Q818,040</td></tr><tr class=""><td>D</td><td>0.217</td><td>5.4%</td><td>74.3%</td><td>Q1,854,120</td></tr></tbody></table><div class="call red"><b>C:</b> ΔAP -0.0047; ahorro 1.1%; 0/4 ventanas positivas. Hipótesis rechazada.</div><div class="call warn"><b>D:</b> recall 74.3%, pero precisión 5.4%: anomalía ≠ fraude.</div></div></div><div class="notes"><h3>Guion</h3><p>Definir AP como calidad del ranking precisión-recall. A obtiene mejor AP, precisión y F1. C cuesta un poco menos y recupera algo más, pero la hipótesis exigía mejora simultánea de AP, costo y estabilidad. D detecta rareza con demasiadas falsas alarmas.</p></div><div class="footer"><b>A · B TCN · C fusión · D autoencoder</b><span>5 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Familia A</span><span class="verdict">A5 gana model_select</span></div>
+  <h1>Seis candidatos; la mejora aparece al combinar, no al reemplazar</h1>
+  <div class="content grid2">
+    <div class="card"><span class="label">AP durante selección</span><div class="bars"><div class="barrow"><b>A0</b><div class="track"><div class="barfill" style="width:44.0%"></div></div><span>0.286</span></div><div class="barrow"><b>A1</b><div class="track"><div class="barfill" style="width:87.6%"></div></div><span>0.569</span></div><div class="barrow"><b>A2</b><div class="track"><div class="barfill" style="width:88.6%"></div></div><span>0.576</span></div><div class="barrow"><b>A3</b><div class="track"><div class="barfill" style="width:79.0%"></div></div><span>0.513</span></div><div class="barrow"><b>A4</b><div class="track"><div class="barfill" style="width:65.9%"></div></div><span>0.428</span></div><div class="barrow"><b>A5</b><div class="track"><div class="barfill" style="width:96.6%"></div></div><span>0.628</span></div></div><div class="call"><b>A5:</b> logits A0–A4 + control congelado; metamodelo ajustado en <code>meta_fit</code>.</div><div class="call warn"><b>Núcleo:</b> A tabular · B TCN causal · C fusión A+B(+D) · D encoder–decoder.</div></div>
+    <div class="grid2 stretch"><div class="card"><span class="label">A0</span><h2>Logística</h2><p class="small">Control lineal y verificable.</p></div><div class="card"><span class="label">A1 / A2</span><h2>LightGBM</h2><p class="small">Completo y reducido por redundancia.</p></div><div class="card"><span class="label">A3 / A4</span><h2>PCA / CatBoost</h2><p class="small">Ablations dimensional y categórica.</p></div><div class="card teal"><span class="label">A5</span><div class="metric">0.628</div><h2>Stacking</h2><p class="small">Conserva el baseline fuerte y permite correcciones complementarias.</p></div></div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>Más variables y CatBoost no ganaron individualmente. A5 mejora porque no descarta V6: lo incorpora con las nuevas vistas y deja que un metamodelo sencillo aprenda cuándo confiar en cada una.</p></div>
+  <div class="footer"><b>A tabular · B secuencial · C apuesta · D anomalía</b><span>5 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Falsificación del orden</span><span class="verdict">Orden no material</span></div><h1>Si el orden importara, barajarlo debería perjudicar</h1><div class="content grid2"><div class="card"><span class="label">Prueba 1 · permutación</span><div class="grid2"><div><div class="metric">0.3915</div><p class="small">B original</p></div><div><div class="metric gold">0.4016</div><p class="small">media permutada</p></div></div><div class="call red">ΔAP original − permutada = -0.0101; se exigía ≥ +0.0100.</div></div><div class="card"><span class="label">Prueba 2 · longitud sin reentrenar</span><div class="bars"><div class="barrow"><b>3</b><div class="track"><div class="fill gold" style="width:96%"></div></div><span>0.385</span></div><div class="barrow"><b>8</b><div class="track"><div class="fill gold" style="width:94%"></div></div><span>0.377</span></div><div class="barrow"><b>16</b><div class="track"><div class="fill gold" style="width:96%"></div></div><span>0.386</span></div><div class="barrow"><b>32</b><div class="track"><div class="fill" style="width:98%"></div></div><span>0.392</span></div></div><div class="call">B aprende señal, pero no demuestra que la secuencia ordenada explique esa señal.</div></div></div><div class="notes"><h3>Guion</h3><p>Se barajan solo antecedentes y se conserva el objetivo al final, cinco veces. El AP aumenta al destruir el orden. Los recortes tampoco muestran patrón creciente. Concluir estrictamente: no hay evidencia de valor material del orden bajo esta identidad y arquitectura.</p></div><div class="footer"><b>5 semillas · historias 3/8/16/32</b><span>6 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Resultados e interpretación</span><span class="verdict">A ofrece el mejor equilibrio</span></div>
+  <h1>AP mide ranking; precisión y recall describen la política</h1>
+  <div class="content">
+    <div class="chart fill"><div class="figure"><img src="../../../evidencia/figuras/v7/01_comparacion_interna_v7.png" alt="Curvas precision recall y ROC internas"></div><div><table><thead><tr><th>Modelo</th><th>AP</th><th>ROC</th><th>Prec.</th><th>Recall</th><th>F1</th><th>Costo</th></tr></thead><tbody><tr class="winner"><td>A</td><td>0.547</td><td>0.913</td><td>19.8%</td><td>77.2%</td><td>0.315</td><td>Q826,800</td></tr><tr class=""><td>B</td><td>0.392</td><td>0.853</td><td>11.2%</td><td>70.8%</td><td>0.194</td><td>Q1,215,900</td></tr><tr class=""><td>C</td><td>0.543</td><td>0.913</td><td>19.4%</td><td>78.1%</td><td>0.311</td><td>Q818,040</td></tr><tr class=""><td>D</td><td>0.217</td><td>0.758</td><td>5.4%</td><td>74.3%</td><td>0.101</td><td>Q1,854,120</td></tr></tbody></table><div class="call red"><b>C:</b> ΔAP -0.0047; ahorro 1.1%; 0/4 ventanas positivas. Hipótesis rechazada.</div><div class="call warn"><b>D:</b> precisión 5.4%; anomalía no equivale a fraude.</div></div></div>
+    <div class="metric-meaning"><div class="card"><span class="label">AP</span><p class="micro">Ranking P–R; base 0.035.</p></div><div class="card"><span class="label">ROC</span><p class="micro">Separación global; no carga.</p></div><div class="card"><span class="label">Precisión</span><p class="micro">Pureza de las alertas.</p></div><div class="card"><span class="label">Recall</span><p class="micro">Fraude recuperado.</p></div><div class="card"><span class="label">Costo</span><p class="micro">Consecuencia del umbral.</p></div></div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>A obtiene AP 0.547 frente a prevalencia 0.035, pero su precisión en el umbral es 19.8%: aproximadamente una de cinco alertas es fraude. ROC 0.913 no contradice esto; mide separación global en un problema muy desbalanceado.</p></div>
+  <div class="footer"><b>AP ≠ precisión puntual · ROC ≠ capacidad operativa</b><span>6 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Costo y estabilidad</span><span class="chip">Q4,200 FN · Q180 FP</span></div><h1>Menos falsas alarmas, pero una ventana rompe el gate</h1><div class="content grid2"><div><div class="grid2"><div class="card teal"><span class="label">Costo interno A5</span><div class="metric">Q826,800</div></div><div class="card"><span class="label">Reducción vs V6</span><div class="metric">8.7%</div></div><div class="card"><span class="label">Alertas / 100k</span><div class="metric">11,966</div></div><div class="card"><span class="label">Recall</span><div class="metric">77.2%</div></div></div><div class="call">$C(τ)=4200FN(τ)+180FP(τ)$ con recall ≥ 0.75.</div></div><div><span class="label">ΔAP V7 − V6 por ventana</span><div class="grid4"><div class="card teal"><span class="label">V1</span><div class="metric ">+0.024</div></div><div class="card teal"><span class="label">V2</span><div class="metric ">+0.007</div></div><div class="card red"><span class="label">V3</span><div class="metric red">-0.014</div></div><div class="card teal"><span class="label">V4</span><div class="metric ">+0.023</div></div></div><div class="call warn"><b>Gate NO aprobado:</b> 3/4 ventanas mejoran, pero V3 cae −0.0135; el límite era −0.005.</div><p class="small">Walk-forward AP: 0.599 · 0.466 · 0.603. La deriva es material.</p></div></div><div class="notes"><h3>Guion</h3><p>El costo favorece recall porque un FN vale 23.3 FP. A5 reduce alertas de 16,764 a 11,966 por 100 mil y conserva recall 77.2%. Aun así, una ventana temporal pierde demasiado AP: por honestidad, no se proclama superioridad estable.</p></div><div class="footer"><b>Promedio mejor · estabilidad pendiente</b><span>7 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Falsificación del orden</span><span class="verdict">Orden no material</span></div>
+  <h1>Si el orden fuera útil, destruirlo debería perjudicar a B</h1>
+  <div class="content grid2">
+    <div class="figure"><img src="../../../evidencia/figuras/v6/03_falsificaciones_orden_v6.png" alt="Pruebas de permutación y longitud"></div>
+    <div class="content"><div class="grid2"><div class="card teal"><span class="label">B original</span><div class="metric">0.3915</div></div><div class="card gold"><span class="label">Media permutada</span><div class="metric gold">0.4016</div><p class="micro">± 0.0023</p></div></div><div class="card red"><span class="label">Prueba falsada</span><h2>ΔAP = -0.0101</h2><p class="small">Se exigía una caída positiva ≥ 0.0100. Barajar antecedentes mejora el AP, por lo que no puede atribuirse valor al orden.</p></div><div class="card fill"><span class="label">Historias 3 / 8 / 16 / 32</span><div class="bars"><div class="barrow"><b>3</b><div class="track"><div class="barfill" style="width:96%"></div></div><span>0.385</span></div><div class="barrow"><b>8</b><div class="track"><div class="barfill" style="width:94%"></div></div><span>0.377</span></div><div class="barrow"><b>16</b><div class="track"><div class="barfill" style="width:96%"></div></div><span>0.386</span></div><div class="barrow"><b>32</b><div class="track"><div class="barfill" style="width:98%"></div></div><span>0.392</span></div></div><p class="small">No existe patrón monotónico; más historial no demuestra más memoria útil.</p></div></div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>Se conserva la transacción objetivo al final y se permutan solo los antecedentes con cinco semillas. El resultado no dice que B sea azar: AP 0.392 contiene señal. Dice que esa señal no puede atribuirse al orden bajo esta identidad y arquitectura.</p></div>
+  <div class="footer"><b>5 semillas · longitudes 3/8/16/32 · objetivo intacto</b><span>7 / 8</span></div>
+</section>
 
-<section class="slide"><div class="top"><span class="eyebrow">Cierre</span><span class="verdict">Decisión condicionada</span></div><h1>Qué conservar, qué rechazar y qué evidencia falta</h1><div class="content grid2"><div class="card teal"><span class="label">Conservar</span><h2>A5 como candidato V7 exploratorio</h2><p class="small">Benchmark histórico: AP 0.566 · precisión 21.0% · recall 78.0% · costo Q4,477,680.</p><div class="call">Mejora utilidad operativa, no demuestra superioridad temporal estable.</div></div><div><div class="grid2"><div class="card red"><span class="label">No promover</span><h3>B</h3><p class="small">No supera A ni demuestra orden.</p></div><div class="card red"><span class="label">No promover</span><h3>C</h3><p class="small">Falla hipótesis previa.</p></div><div class="card red"><span class="label">No promover</span><h3>D</h3><p class="small">Anomalía con baja precisión.</p></div><div class="card gold"><span class="label">Siguiente prueba</span><h3>Cohorte futura</h3><p class="small">Identidad fiable + costos reales.</p></div></div><div class="call warn"><b>La evidencia que cambiaría la decisión:</b> repetir ΔAP ≥0.01 y −5% costo sin caídas >0.005 en una cohorte nueva.</div></div></div><div class="notes"><h3>Guion</h3><p>Cerrar con una frase: V7 demuestra que combinar tabulares puede mejorar la operación, pero también que la deriva temporal invalida una victoria simple. El proyecto responde la pregunta A/B/C, no oculta resultados negativos y deja un siguiente experimento verificable.</p></div><div class="footer"><b>Wilson Alejandro Calderón · Pablo Daniel Barillas</b><span>8 / 8</span></div></section>
+<section class="slide">
+  <div class="top"><span class="eyebrow">Costo, calibración y deriva</span><span class="chip">Q4,200 FN · Q180 FP</span></div>
+  <h1>Menos falsas alarmas, pero una ventana rompe el gate</h1>
+  <div class="content">
+    <div class="grid4"><div class="card teal"><span class="label">Costo A5</span><div class="metric">Q826,800</div></div><div class="card"><span class="label">Reducción vs V6</span><div class="metric">8.7%</div></div><div class="card"><span class="label">Alertas / 100k</span><div class="metric">11,966</div></div><div class="card"><span class="label">Brier A</span><div class="metric">0.0193</div></div></div>
+    <div class="grid2 fill"><div class="figure dual"><img src="../../../evidencia/figuras/v7/05_costos_v7.png" alt="Costos internos"><img src="../../../evidencia/figuras/v7/06_calibracion_v7.png" alt="Calibración"></div><div class="content"><span class="label">ΔAP V7 − V6 por ventana</span><div class="grid4"><div class="card compact positive"><span class="label">Ventana 1</span><div class="metric ">+0.024</div><p class="micro">ΔAP V7 − V6</p></div><div class="card compact positive"><span class="label">Ventana 2</span><div class="metric ">+0.007</div><p class="micro">ΔAP V7 − V6</p></div><div class="card compact negative"><span class="label">Ventana 3</span><div class="metric red">-0.014</div><p class="micro">ΔAP V7 − V6</p></div><div class="card compact positive"><span class="label">Ventana 4</span><div class="metric ">+0.023</div><p class="micro">ΔAP V7 − V6</p></div></div><div class="call red"><b>Gate no aprobado:</b> tres ventanas mejoran, pero la tercera cae más que el límite −0.005.</div><div class="card fill"><span class="label">Decisión y siguiente evidencia</span><p class="small">A5 genera 1,700 FP y 124 FN: Q306,000 por FP y Q520,800 por FN. Reduce Q78,540 frente al control. Se conserva A5 como candidato exploratorio; B no demuestra orden, C falla su hipótesis y D genera demasiadas alertas.</p><p class="small"><b>Para promover:</b> repetir ΔAP ≥ 0.01 y ahorro ≥ 5% sin caídas temporales en una cohorte futura con identidad y costos reales.</p><p class="micro">Fuente: IEEE-CIS Fraud Detection · Vesta Corporation · Kaggle.</p></div></div></div>
+  </div>
+  <div class="notes"><h3>Guion</h3><p>El falso negativo vale 23.3 falsos positivos. A5 reduce carga y conserva recall 77.2%, pero el gate pregunta algo distinto: si la ventaja persiste. Una ventana negativa impide una afirmación estable.</p></div>
+  <div class="footer"><b>Conclusión: mejora promedio; confirmación temporal pendiente</b><span>8 / 8</span></div>
+</section>
 
-<div class="progress"></div><div class="controls"><button onclick="show(index-1)">‹</button><button onclick="show(index+1)">›</button><button onclick="document.body.classList.toggle('show-notes')">N</button></div><div class="help">← → navegar · N notas · F pantalla completa</div>
-<script>const slides=[...document.querySelectorAll('.slide')],progress=document.querySelector('.progress');let index=0;function show(n){index=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,i)=>s.classList.toggle('active',i===index));progress.style.width=((index+1)/slides.length*100)+'%';location.hash=index+1}document.addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(['arrowright',' ','pagedown'].includes(k)){e.preventDefault();show(index+1)}if(['arrowleft','pageup'].includes(k)){e.preventDefault();show(index-1)}if(k==='n')document.body.classList.toggle('show-notes');if(k==='f')document.documentElement.requestFullscreen?.();if(k==='home')show(0);if(k==='end')show(slides.length-1)});show(Math.max(0,(parseInt(location.hash.slice(1))||1)-1));</script></body></html>
+<div class="progress"></div>
+<div class="controls"><button onclick="show(index-1)">‹</button><button onclick="show(index+1)">›</button><button onclick="document.body.classList.toggle('show-notes')">N</button></div>
+<div class="help">← → navegar · N notas · F pantalla completa</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')],progress=document.querySelector('.progress');
+let index=0;
+function show(n){index=Math.max(0,Math.min(slides.length-1,n));slides.forEach((s,i)=>s.classList.toggle('active',i===index));progress.style.width=((index+1)/slides.length*100)+'%';location.hash=index+1}
+document.addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(['arrowright',' ','pagedown'].includes(k)){e.preventDefault();show(index+1)}if(['arrowleft','pageup'].includes(k)){e.preventDefault();show(index-1)}if(k==='n')document.body.classList.toggle('show-notes');if(k==='f')document.documentElement.requestFullscreen?.();if(k==='home')show(0);if(k==='end')show(slides.length-1)});
+show(Math.max(0,(parseInt(location.hash.slice(1))||1)-1));
+</script>
+</body>
+</html>
