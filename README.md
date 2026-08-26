@@ -1,13 +1,15 @@
 <div align="center">
 
-# Proyecto 1 · Monitoreo transaccional · V6 integrada
+# Proyecto 1 · Monitoreo transaccional · V7
 
-### ¿El orden aporta información más allá de los agregados?
+### ¿El orden aporta señal incremental y cuánto vale económicamente?
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.13-EE4C2C?logo=pytorch&logoColor=white)
 ![LightGBM](https://img.shields.io/badge/LightGBM-4.7-184e77)
-![Estado](https://img.shields.io/badge/Candidato-A__V4-2a9d8f)
+![CatBoost](https://img.shields.io/badge/CatBoost-1.2.10-e9c46a)
+![Versión](https://img.shields.io/badge/Revisar-V7-2a9d8f)
+![Estado](https://img.shields.io/badge/Promoción-exploratoria-f4b942)
 
 **Wilson Alejandro Calderón Argueta · 22018** · **Pablo Daniel Barillas Moreno · 22193**
 
@@ -16,130 +18,149 @@ Universidad del Valle de Guatemala · Deep Learning y Sistemas Inteligentes · S
 </div>
 
 > [!IMPORTANT]
-> El último 15 % de IEEE-CIS ya fue observado en iteraciones anteriores y se reporta como benchmark temporal histórico reutilizado. Todas las decisiones V6 se toman dentro de validación. Una promoción confirmatoria exige una cohorte nueva.
+> **La versión que debe revisarse es V7.** El último 15 % de IEEE-CIS ya fue observado en versiones anteriores y se reporta como benchmark temporal histórico reutilizado. Todas las decisiones V7 se toman dentro del período de desarrollo; una conclusión confirmatoria exige una cohorte futura etiquetada.
 
 ## Resumen ejecutivo
 
-El proyecto estudia 590,540 transacciones IEEE-CIS, con 20,663 fraudes y prevalencia 3.50%. Compara una línea tabular competitiva sin orden (A), GRU/TCN causales sobre hasta 32 eventos (B), una fusión condicionada (C) y un encoder–decoder entrenado solo con transacciones legítimas (D). A obtiene AP interna 0.5362, B 0.3915, C 0.5192 y D 0.2172.
+El proyecto analiza 590,540 transacciones IEEE-CIS, 20,663 fraudes y una prevalencia de 3.50%. La pregunta no es simplemente qué arquitectura produce el número más alto, sino si el orden de eventos aporta información incremental frente a un baseline sin orden competitivo y si esa diferencia mejora una decisión de monitoreo con costos explícitos.
 
-La permutación controlada no perjudica a B: su AP cambia de 0.3915 a 0.4016 ± 0.0023. La diferencia original−permutada es -0.0101. Con esta evidencia no se afirma que el orden aporte. C tampoco supera su criterio previo: cambio AP -0.0170 y reducción de costo 0.63%. El candidato es A.
+V7 amplía el espacio tabular a 465 columnas después de ingeniería, compara regresión logística, LightGBM completo, LightGBM reducido por correlación, PCA, CatBoost y stacking. Mantiene el experimento obligatorio A/B/C: A es el baseline sin orden; B es una TCN causal congelada de V6; C fusiona predicciones fuera de tiempo; D es un encoder–decoder PyTorch entrenado solo con operaciones legítimas y funciona como control de anomalía.
 
-## Datos y protocolo temporal
+El ganador interno es `A5_ensamble_tabular`. A obtiene AP 0.5474, ROC-AUC 0.9129, precisión 19.81%, recall 77.21%, F1 0.3153, 11,966 alertas por 100,000 y costo Q826,800. Frente al control V6, aumenta AP +0.0111, reduce costo 8.68% y reduce alertas 28.62%; a cambio, recall baja de 80.33% a 77.21%.
 
-Se utiliza la competencia pública [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection/overview) de Kaggle, con datos anonimizados suministrados por Vesta Corporation. `train_transaction.csv` y `train_identity.csv` se unen por `TransactionID`, las filas se ordenan por `TransactionDT` y ambos campos se excluyen como magnitudes predictivas. La identidad secuencial es una clave aproximada formada por `card1`, `card2`, `card3`, `card5` y `addr1`.
+La mejora no se declara estable. Tres ventanas son favorables, pero una cae -0.0135 AP y el límite previo era −0.005. El gate de promoción es **false**. V7 queda como candidato exploratorio mejor equilibrado, no como reemplazo confirmatorio.
 
-La separación es 70 % entrenamiento, 15 % validación y 15 % benchmark histórico. Validación se subdivide cronológicamente en early stopping, ajuste de C, calibración, umbral y evaluación interna. Imputación, escalado y vocabularios se aprenden exclusivamente con entrenamiento. Las características históricas utilizan solo eventos anteriores; no se aplican particiones aleatorias.
+## Resultado principal
 
-## EDA, correlación y PCA
+| Modelo | AP interna | ROC-AUC | Precisión | Recall | F1 | Costo | Alertas/100k |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **A · A5 stacking** | **0.5474** | **0.9129** | **19.81%** | 77.21% | **0.3153** | Q826,800 | **11,966** |
+| B · TCN causal | 0.3915 | 0.8526 | 11.22% | 70.77% | 0.1938 | Q1,215,900 | 19,360 |
+| C · A+B | 0.5426 | 0.9127 | 19.38% | **78.12%** | 0.3106 | **Q818,040** | 12,378 |
+| D · autoencoder | 0.2172 | 0.7582 | 5.43% | 74.26% | 0.1012 | Q1,854,120 | 41,982 |
 
-La V6 entrega un cuaderno exploratorio ejecutado que examina las 434 columnas de la unión teórica, la cobertura parcial de identidad, faltantes extremos, variables constantes, cambios temporales y asociación univariada con `isFraud`. También compara varias definiciones de entidad y cuantifica qué proporción de transacciones dispone de 3, 8, 16 o 32 eventos. Esta evidencia explica por qué ampliar una secuencia sin mejorar la identidad puede añadir ruido en lugar de memoria útil.
+C cuesta ligeramente menos, pero no se promueve: cambia AP -0.0047, reduce costo solo 1.06% y no mejora ninguna de cuatro ventanas. La regla previa exigía +0.01 AP, −5 % costo, recall ≥0.75, crecimiento de alertas ≤10 % y mejora en tres ventanas. D conserva recall, pero su precisión de 5.43% confirma que rareza y fraude no son sinónimos.
 
-La correlación de Spearman se usa para localizar familias redundantes, especialmente dentro de `V1–V339`, pero no para eliminar automáticamente todo par correlacionado. Los árboles pueden aprovechar umbrales e interacciones diferentes incluso entre variables similares; por ello cada reducción debe validarse temporalmente. PCA se estudia como compresión del bloque V: resume gran parte de su varianza con muchas menos componentes, pero una varianza reconstruida alta no garantiza conservar la señal de fraude minoritaria. Como la ablation V3 con PCA rindió peor, V6 conserva PCA como diagnóstico y no como transformación del candidato.
+## Cómo interpretar las métricas
 
-Las nuevas características priorizan significado operativo y causalidad: conteos y monto medio por entidad en 1, 6, 24 y 72 horas; tiempo desde el evento anterior; monto relativo al historial; cambios de dispositivo/dirección; cantidad de faltantes; variables `C`, `D`, `V` e identidad seleccionadas. `TransactionID` y `TransactionDT` permanecen fuera del vector predictivo.
+- **AP o Average Precision** resume la curva precisión–recall a través de umbrales. AP 0.547 no significa que 54.7 % de alertas sea correcta; esa pureza puntual la expresa la precisión (19.81%). AP es principal porque la clase positiva representa solo 3.50%.
+- **ROC-AUC** aproxima la probabilidad de ordenar un fraude por encima de una operación legítima elegida al azar. Un ROC 0.913 muestra buena separación global, pero puede coexistir con muchas falsas alarmas cuando hay millones de negativos.
+- **Precisión** responde: “de todas las alertas, ¿cuántas son fraude?”. A logra 19.81%, aproximadamente una alerta verdadera por cada cinco.
+- **Recall** responde: “de todos los fraudes, ¿cuántos se detectaron?”. A recupera 77.21%, casi ocho de diez.
+- **F1** combina precisión y recall, pero no conoce el costo en quetzales. Por eso se reporta junto con `Q4,200×FN + Q180×FP`.
+- **Precision@1 %** es 88.70%: si solo se revisa el 1 % de mayor riesgo, casi nueve de diez seleccionadas son fraude. **Recall@1 %** es 28.86%: esa capacidad limitada captura alrededor de tres de diez fraudes.
 
-## Modelos A/B/C y control D
+## Datos, orden y prevención de fuga
 
-| Pieza | Diseño | Resultado interno |
-|---|---|---:|
-| A | LightGBM V4 con expertos `ProductCD=W/NO-W` | AP 0.5362 · costo Q904,620 |
-| B | GRU frente a TCN causal; seleccionada `B_TCN`, hasta 32 eventos | AP 0.3915 · costo Q1,215,540 |
-| C | Regresión logística condicionada sobre A/B/D, monto, historia e identidad | AP 0.5192 · costo Q898,920 |
-| D | Encoder–decoder PyTorch entrenado solo con legítimas | AP 0.2172 · costo Q1,852,080 |
+La fuente es [IEEE-CIS Fraud Detection](https://www.kaggle.com/competitions/ieee-fraud-detection/overview), publicada en Kaggle con datos anonimizados proporcionados por Vesta Corporation. `train_transaction.csv` y `train_identity.csv` se unen por `TransactionID`; las filas se ordenan por `TransactionDT`. Ambos campos se excluyen como magnitudes predictivas: el primero solo alinea evidencia y el segundo define el reloj.
 
-A conserva `A_V4` porque el refuerzo LightGBM no fue estable en las dos subventanas de selección. B compara dos arquitecturas con BCE ponderada, AdamW, clipping y early stopping. D minimiza MSE de reconstrucción legítima; su alta tasa de anomalías demuestra que anomalía y fraude no son equivalentes. C se entrena en un bloque independiente y no recibe el benchmark para decidir su arquitectura.
+La partición temporal es 70 % entrenamiento, 15 % validación y 15 % benchmark histórico. Validación se subdivide, en ese orden, en early stopping, `meta_fit`, `model_select`, calibración, umbral y evaluación. Toda imputación, frecuencia, asociación con fraude, correlación de Spearman, selección y PCA se ajusta exclusivamente con train. Los tres walk-forward vuelven a ajustar el preprocesamiento dentro de cada pliegue.
 
-## Hipótesis y falsificaciones
+Las variables causales usan solo eventos anteriores: frecuencias previas de tarjeta, dirección, correo, dispositivo y producto; monto histórico; recencia; faltantes y resúmenes C/D/V/identidad. La entidad proxy se diagnostica con cuatro definiciones. Ninguna clave anonimizada equivale necesariamente a un cliente real.
 
-**Hipótesis previa de C:** Creemos que una fusión condicionada por la calidad de identidad e historial mejorará AUC-PR y costo porque el puntaje secuencial solo debería influir cuando la historia sea suficientemente fiable. La consideraremos útil si incrementa AUC-PR al menos 0.01 y reduce el costo al menos 5% frente al mejor modelo individual, manteniendo recall mayor o igual a 0.75.
+## Correlación y PCA
 
-La hipótesis no se cumple. C pierde 0.0170 de AP y aumenta el costo 0.63 % frente a A en evaluación interna.
+El análisis encuentra 34 relaciones con `|ρ de Spearman| ≥ 0.995` en la muestra train-only y conserva 426 representantes. Esto reduce redundancia extrema, no “variables poco correlacionadas con fraude” de forma ciega. Una variable con baja asociación marginal todavía puede ser útil mediante interacciones.
 
-Las dos pruebas obligatorias son:
+PCA se limita al bloque `V1–V339`. Se ajustan 128 componentes con una muestra determinista contenida en train; se necesitan 70 para 90 % y 105 para 95 % de varianza. La mejor variante PCA alcanza AP de selección 0.5135, por debajo de LightGBM completo y correlación. La conclusión es predictiva: PCA comprime, pero no mejora el detector.
 
-1. Permutación de antecedentes con cinco semillas, manteniendo la transacción objetivo al final.
-2. Recorte de la historia a 3, 8 y 16 eventos.
+## Valor del orden
 
-La historia de 3 eventos obtiene AP 0.3847, la de 8 obtiene 0.3774 y la de 16 obtiene 0.3860. Ninguna evidencia justifica afirmar que el orden mejore el detector.
+La prueba principal mantiene el evento objetivo al final y permuta solo antecedentes con cinco semillas. B original obtiene AP 0.3915 y la media permutada 0.4016 ± 0.0023. La diferencia original−permutada es -0.0101; se exigía una caída positiva mínima de 0.01. Por tanto, no se afirma que el orden aporte.
 
-## Resultados y decisión económica
+El segundo intento recorta la historia sin reentrenar: 3 eventos producen AP 0.3847, 8 producen 0.3774, 16 producen 0.3860 y 32 producen 0.3915. No existe patrón monotónico. B aprende señal, pero esa señal puede provenir del evento actual o la composición histórica, no del orden.
 
-| Modelo | AUC-PR benchmark | Precisión | Recall | F1 | Costo |
+## Estabilidad y benchmark histórico
+
+Los walk-forward del recipe reducido alcanzan AP 0.599 / 0.466 / 0.603. La dispersión evidencia deriva. En las cuatro ventanas del gate, las diferencias A5−V6 son +0.0244 / +0.0070 / -0.0135 / +0.0227. La tercera ventana impide promoción estable.
+
+El benchmark histórico, solo descriptivo, muestra:
+
+| Modelo | AP | Precisión | Recall | F1 | Costo |
 |---|---:|---:|---:|---:|---:|
-| **A** | **0.559** | **15.78%** | 80.70% | **0.264** | **Q4,889,400** |
-| B | 0.465 | 12.27% | 78.49% | 0.212 | Q5,898,960 |
-| C | 0.563 | 17.14% | **79.82%** | 0.282 | Q4,753,500 |
-| D | 0.229 | 5.61% | 82.39% | 0.105 | Q9,977,040 |
+| A | 0.5656 | 20.98% | 78.01% | 0.3307 | Q4,477,680 |
+| B | 0.4654 | 12.47% | 78.37% | 0.2151 | Q5,854,920 |
+| C | 0.5714 | 20.49% | 78.85% | 0.3252 | Q4,436,880 |
+| D | 0.2287 | 5.61% | 82.35% | 0.1051 | Q9,969,180 |
 
-La política de umbral minimiza $4200FN+180FP$ sujeta a recall ≥ 0.75 en selección. El umbral de A es 0.03622. En el escenario central de 12 transacciones por tarjeta al mes, A representa un costo mensual proyectado de Q927,308,565. Es una extrapolación académica, no una cifra contable.
-
-### Cómo interpretar las métricas
-
-AP 0.559 significa que A mantiene una relación precisión–recall muy superior a la prevalencia de 3.50%; no significa que 55.9 % de sus alertas sea correcto. Esa proporción puntual la expresa la precisión: 15.78%. El recall 80.70% indica que el umbral recupera cerca de ocho de cada diez fraudes, mientras que ROC-AUC 0.901 describe la probabilidad de ordenar un fraude por encima de una transacción legítima elegida al azar. Debido al desbalance, un ROC alto puede coexistir con miles de falsas alarmas; por eso AP, alertas/100k y costo acompañan siempre a ROC.
-
-D ilustra el mismo punto desde otro ángulo: alcanza recall 82.39%, pero precisión de solo 5.61%. El encoder–decoder reconoce rareza, no fraude: operaciones legítimas poco frecuentes, deriva o patrones con muchos faltantes también reconstruyen mal. C aparece descriptivamente competitivo en el benchmark, pero no se promueve porque su hipótesis se rechazó en evaluación interna. Reabrir esa decisión con el período final sería seleccionar con el test reutilizado.
-
-## Tres decisiones técnicas importantes
-
-1. **A tabular V4 frente al HistGradientBoosting V1.** Se consideró conservar el baseline antiguo. Se eligió LightGBM con expertos porque usa más variables causales y obtiene AP y costo claramente mejores.
-2. **GRU frente a TCN causal.** Ambas se entrenaron con la misma población; TCN ganó en `model_select`, aunque la permutación mostró que su ranking no depende favorablemente del orden.
-3. **Fusión y anomalías.** Se añadió un encoder–decoder legítimo como D y como entrada de C. Se conserva como ablation porque su baja precisión y alto costo no justifican promoverlo.
-
-## Reproducción
+## Reproducción rápida
 
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r configuracion/v6/requirements-v6.txt
-python -m pip install -r configuracion/v6/requirements-docs-v6.txt
-python codigo/compartido/download_data.py
-python -u codigo/v6/proyecto1_v6_pipeline.py
-python codigo/v6/build_v6_deliverables.py
-jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=300 entregables/cuaderno/v6/proyecto1_calderon_barillas.ipynb
-python codigo/v6/audit_project1_v6.py
+python -m pip install --upgrade pip
+python -m pip install -r configuracion/v7/requirements-v7.txt
+python -m pip install -r configuracion/v7/requirements-docs-v7.txt
+$env:PROYECTO1_RAW=(Resolve-Path datos/raw)
+python -u codigo/v7/proyecto1_v7_pipeline.py
+python codigo/v7/build_notebooks_v7.py
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=600 entregables/cuaderno/v7/proyecto1_calderon_barillas.ipynb
+python codigo/v7/report_v7.py
+python codigo/v7/presentation_v7.py
+python codigo/v7/build_documentation_v7.py
+python codigo/v7/audit_project1_v7.py
 ```
 
-La descarga requiere aceptar las reglas de IEEE-CIS en Kaggle y configurar las credenciales fuera del repositorio. Los CSV de casi 700 MB no se versionan.
+La descarga requiere aceptar las reglas de Kaggle. Los CSV, credenciales y tokens no se versionan. Consulte [`configuracion/v7/INSTRUCCIONES_V7.md`](configuracion/v7/INSTRUCCIONES_V7.md) para la corrida completa.
 
-## Estructura
+## Estructura y versiones
+
+Las carpetas principales se mantienen en la raíz; cada una contiene subcarpetas por versión.
 
 ```text
-codigo/v6/              pipeline, construcción y auditoría de V6
-configuracion/v6/       versiones exactas e instrucciones
-datos/raw/              CSV locales ignorados por Git
-artefactos/v6/          pesos A/B/C/D, calibradores, contrato y puntajes
-evidencia/figuras/v6/   resultados reproducibles
-entregables/cuaderno/v6/ notebook ejecutado
-entregables/informe/v6/  fuente LaTeX y PDF
-entregables/presentacion/v6/ HTML y PDF de ocho diapositivas
-entregables/ficha/v6/    ficha del repositorio
+codigo/v7/                 pipeline, finalización, builders y auditoría
+configuracion/v7/          protocolo, instrucciones y dependencias exactas
+datos/processed/v7/        asociación, correlación y auditoría
+artefactos/v7/             modelos A0–A5/C, scores, umbrales y contrato
+evidencia/figuras/v7/      seis figuras reproducibles
+entregables/cuaderno/v7/   notebook oficial y EDA ejecutados
+entregables/informe/v7/    LaTeX y PDF de siete páginas
+entregables/presentacion/v7/ HTML/PDF de ocho diapositivas y guion
+entregables/ficha/v7/      ficha DOCX/PDF y copia del README
 ```
+
+| Versión | Enfoque | Estado |
+|---|---|---|
+| V1 | Experimento A/B/C original | Histórica |
+| V2 | LightGBM, walk-forward y calibración | Histórica |
+| V3 | Regresión logística, PCA y controles | Histórica |
+| V4 | LightGBM/CatBoost/XGBoost y expertos | Baseline fuerte heredado |
+| V5 | Reintegración rubricada A/B/C | Histórica |
+| V6 | EDA, TCN y encoder–decoder | Control experimental |
+| **V7** | Variables completas, correlación/PCA, CatBoost y stacking con V6 | **Versión a revisar** |
 
 ## Candidato al Proyecto Final
 
-- **Modelo conservado:** A — LightGBM V4 con expertos por `ProductCD` y calibrador V6.
-- **Artefactos:** `artefactos/v4/modelo_experto_w_v4.txt`, `modelo_experto_no_w_v4.txt`, `artefactos/v6/calibradores_v6.joblib` y `contrato_entrada_salida_v6.json`.
-- **Usuario:** analista de riesgo o equipo de monitoreo transaccional.
-- **Decisión:** ordenar alertas y priorizar revisión; el puntaje no prueba fraude ni autoriza bloqueo autónomo.
-- **Entrada preliminar:** transacción actual, variables categóricas y estadísticas históricas causales especificadas por el contrato.
-- **Salida:** `risk_score` continuo en [0,1], umbral 0.03622 y política de revisión.
-- **Pendientes:** nueva cohorte etiquetada, identidad bancaria fiable, costos reales, latencia, privacidad, equidad, seguridad, explicaciones y monitoreo.
+- **Modelo:** A5, stacking logístico de A0–A4 y control V6.
+- **Usuario previsto:** equipo de monitoreo o analista de riesgo.
+- **Decisión:** priorizar transacciones para revisión bajo capacidad limitada.
+- **Entrada:** transacción actual y agregados estrictamente causales descritos en `artefactos/v7/contrato_entrada_salida_v7.json`.
+- **Salida:** `risk_score` calibrado en `[0,1]`; umbral 0.05000306; indicador binario derivado.
+- **Faltantes:** medianas y frecuencias aprendidas en train; categorías nuevas reciben frecuencia cero.
+- **Riesgos:** deriva, identidad proxy, falsos positivos, fraude adaptativo, costos hipotéticos y benchmark reutilizado.
+- **Pendiente confirmatorio:** cohorte futura, identidad bancaria fiable, costos/capacidad reales, latencia, privacidad, equidad, explicación y monitoreo.
+
+## Tres decisiones técnicas importantes
+
+1. **Conservar el baseline V6 dentro de A5.** Alternativa: reemplazarlo por el mejor modelo nuevo. Evidencia: los nuevos aislados caen en evaluación; el stacking con V6 alcanza AP 0.5474 y costo Q826,800.
+2. **Validar correlación y PCA como ablations.** Alternativa: borrar automáticamente columnas correlacionadas o comprimir todo el dataset. Evidencia: A2 gana selección frente a A1, pero PCA y la reducción aislada no sostienen superioridad.
+3. **Rechazar C y el valor del orden según reglas previas.** Alternativa: promover C por el benchmark o asumir que TCN usa orden. Evidencia: C pierde AP interna y permutar antecedentes no perjudica B.
 
 ## Limitaciones y uso responsable
 
-IEEE-CIS está anonimizado y cubre aproximadamente 182 días. La clave proxy no equivale a un cliente real. El benchmark ya fue observado y ninguna conclusión se presenta como confirmación externa. Los costos y volúmenes mensuales son escenarios. El sistema debe apoyar revisión humana, no atribuir culpabilidad ni bloquear de manera autónoma.
+IEEE-CIS está anonimizado y cubre un período finito. La identidad es una aproximación, los costos son académicos y el benchmark no es ciego. El score mide riesgo estadístico, no certeza ni culpabilidad. Antes de cualquier despliegue se requieren pruebas con una cohorte futura, auditoría de privacidad/equidad, explicaciones, latencia, seguridad, monitoreo de deriva y un procedimiento de apelación.
 
 ## Declaración de uso de inteligencia artificial
 
-Se utilizó asistencia de IA para estructurar y revisar código, diseñar documentación HTML/CSS/LaTeX, localizar bibliografía y automatizar auditorías. Los integrantes ejecutaron el pipeline y verificaron particiones, alineación de IDs, métricas, falsificaciones, umbrales y artefactos. La IA no se utilizó como fuente académica ni reemplaza la defensa de las decisiones.
+Se utilizó asistencia de IA para estructurar y revisar código, diseñar documentación HTML/CSS/LaTeX, automatizar auditorías y mejorar la redacción. Los integrantes ejecutaron el pipeline, comprobaron alineación de IDs, particiones, transformaciones train-only, métricas, falsificaciones, gates y artefactos. La IA no se usa como fuente académica y no sustituye la defensa del proyecto.
 
 ## Referencias APA 7
-
-Cho, K., et al. (2014). Learning phrase representations using RNN encoder–decoder for statistical machine translation. *Proceedings of EMNLP*, 1724–1734. https://doi.org/10.3115/v1/D14-1179
 
 IEEE Computational Intelligence Society. (2019). *IEEE-CIS Fraud Detection* [Data set]. Kaggle. https://www.kaggle.com/competitions/ieee-fraud-detection/overview
 
 Ke, G., et al. (2017). LightGBM: A highly efficient gradient boosting decision tree. *Advances in Neural Information Processing Systems, 30*.
+
+Prokhorenkova, L., Gusev, G., Vorobev, A., Dorogush, A. V., & Gulin, A. (2018). CatBoost: Unbiased boosting with categorical features. *Advances in Neural Information Processing Systems, 31*.
 
 Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. *PLOS ONE, 10*(3), e0118432. https://doi.org/10.1371/journal.pone.0118432
 

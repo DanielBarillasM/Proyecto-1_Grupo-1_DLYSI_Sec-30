@@ -1,0 +1,82 @@
+﻿[
+    {
+        "archivo":  "artefactos/v7/calibradores_v7.joblib",
+        "bytes":  2281
+    },
+    {
+        "archivo":  "artefactos/v7/contrato_entrada_salida_v7.json",
+        "bytes":  7020
+    },
+    {
+        "archivo":  "artefactos/v7/curvas_umbral_v7.csv",
+        "bytes":  337345
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A0_regresion_logistica_v7.joblib",
+        "bytes":  5246
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A1_lightgbm_ampliado_v7.joblib",
+        "bytes":  4799286
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A2_lightgbm_correlacion_v7.joblib",
+        "bytes":  4826651
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A3_lightgbm_pca_v7.joblib",
+        "bytes":  3763375
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A4_catboost_v7.cbm",
+        "bytes":  19170404
+    },
+    {
+        "archivo":  "artefactos/v7/modelo_A5_ensamble_tabular_v7.joblib",
+        "bytes":  1633
+    },
+    {
+        "archivo":  "artefactos/v7/modelos_C_fusion_v7.joblib",
+        "bytes":  3323
+    },
+    {
+        "archivo":  "artefactos/v7/pca_bloque_v_v7.joblib",
+        "bytes":  363325
+    },
+    {
+        "archivo":  "artefactos/v7/predicciones_benchmark_v7.csv",
+        "bytes":  10784031
+    },
+    {
+        "archivo":  "artefactos/v7/predicciones_validacion_v7.csv",
+        "bytes":  10807144
+    },
+    {
+        "archivo":  "artefactos/v7/preprocesamiento_catboost_v7.joblib",
+        "bytes":  1189
+    },
+    {
+        "archivo":  "artefactos/v7/preprocesamiento_tabular_v7.joblib",
+        "bytes":  288594
+    },
+    {
+        "archivo":  "artefactos/v7/puntajes_crudos_candidatos_a_v7.npz",
+        "bytes":  6905248
+    },
+    {
+        "archivo":  "artefactos/v7/resultados_v7.json",
+        "bytes":  26296
+    },
+    {
+        "archivo":  "artefactos/v7/seleccion_modelos_v7.json",
+        "bytes":  1359
+    },
+    {
+        "archivo":  "artefactos/v7/umbrales_v7.json",
+        "bytes":  154
+    },
+    {
+        "archivo":  "artefactos/v7/validacion_walk_forward_v7.csv",
+        "bytes":  392
+    }
+]

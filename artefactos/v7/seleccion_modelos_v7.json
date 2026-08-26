@@ -1,0 +1,53 @@
+{
+  "A": {
+    "auc_pr_model_select": {
+      "A0_logistica": 0.28576379976704974,
+      "A1_lgbm_ampliado": 0.5694743337383396,
+      "A2_lgbm_correlacion": 0.5760892303630917,
+      "A3_pca_128": 0.5134764854011884,
+      "A4_catboost": 0.4282090999356544,
+      "A5_ensamble_tabular": 0.6281274619117856
+    },
+    "auc_pr_subventanas": {
+      "A0_logistica": [
+        0.3112495479661628,
+        0.2546280283815887
+      ],
+      "A1_lgbm_ampliado": [
+        0.5900968354296932,
+        0.5508396366135934
+      ],
+      "A2_lgbm_correlacion": [
+        0.5967539222555317,
+        0.5554959642902666
+      ],
+      "A3_pca_128": [
+        0.5427810039080233,
+        0.496146042428608
+      ],
+      "A4_catboost": [
+        0.4555103706550937,
+        0.3997096792802117
+      ],
+      "A5_ensamble_tabular": [
+        0.6487977732213941,
+        0.61968813814981
+      ]
+    },
+    "seleccionado": "A5_ensamble_tabular",
+    "pca_auc_pr_model_select": {
+      "A3_pca_32": 0.5025882718815143,
+      "A3_pca_64": 0.5058356091015513,
+      "A3_pca_128": 0.5134764854011884
+    },
+    "correccion": "A5 incluye A_V6_control como exigía el protocolo"
+  },
+  "C": {
+    "auc_pr_model_select": {
+      "C1_A_B": 0.6381722723835911,
+      "C2_A_B_D": 0.6360848330647736,
+      "C3_condicionada": 0.633727389685217
+    },
+    "seleccionado": "C1_A_B"
+  }
+}
